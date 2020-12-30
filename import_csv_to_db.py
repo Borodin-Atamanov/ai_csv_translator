@@ -20,3 +20,8 @@ with open(files['input_csv_file'], mode='r') as csv_file:
         line_count += 1
     print(f'Processed {line_count} lines.')
 
+sql_query = "select 1+1"
+con.execute(sql_query)
+
+#print(con.fetchall())
+
