@@ -3,8 +3,51 @@ import csv
 import sys
 import sqlite3
 import time
+import datetime
+import shutil
+#import path
+import os
 
-con = sqlite3.connect(db['sqlite3file'])
+#Create backups dir (if not exists)
+if not os.path.exists(files['backups_dir']): os.makedirs(files['backups_dir'])
+#Backup BD
+if (os.path.isfile(db['sqlite3file'])): shutil.move (db['sqlite3file'], files['backups_dir']+datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")+files['db_backup_filename_end'])
+
+#Create new DataBase if it is not exists
+if not os.path.exists(db['sqlite3file']): 
+    #print('Файла нет,создаём')
+    con = sqlite3.connect(db['sqlite3file'])
+    cur = con.cursor()
+    result = cur.execute("""
+    CREATE TABLE `sentences` (
+    `id`    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+    `original_id`   TEXT,
+    `from`  TEXT,
+    `to`    TEXT,
+    `computed`  INTEGER
+    );
+    """)
+    result = cur.execute("""
+    CREATE TABLE `glossary` (
+    `id`    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+    `from`  TEXT,
+    `to`    TEXT
+    );
+    """)
+    result = cur.execute("""
+    CREATE TABLE `translation_cache` (
+    `id`    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+    `from`  TEXT,
+    `to`    TEXT,
+    `created`   INTEGER
+    );
+    """)
+    con.commit()
+else:
+    #Just make connection to db
+    con = sqlite3.connect(db['sqlite3file'])
+    cur = con.cursor()
+
 
 #Read data from CSV and save it to SQLite3-database
 with open(files['input_csv_file'], mode='r') as csv_file:
@@ -12,24 +55,13 @@ with open(files['input_csv_file'], mode='r') as csv_file:
     line_count = 0
     for row in csv_reader:
         computed = int(time.time())
-        #ToDo исправить: должно добавляться в базу данных, а сейчас - не добавляется почему-то
-        result = con.execute("insert into 'sentences' ('original_id', 'from', 'to', 'computed') values (?, ?, ?, ?)", (row[0], row[1], row[2], computed))
-        print(result)
-        con.commit()
-        #ToDo добавить try-catch блок для запросов к БД
-        #Отловить результат выполнения запроса к БД
-
-        if line_count == 10: break;
-
-        #print(f'Column names are {", ".join(row)}')
-        #print(f'\t{row["name"]} works in the {row["department"]} department, and was born in {row["birthday month"]}.')
-        #if line_count == 3:
-        #print(repr(row))
-
+        result = cur.execute("insert into `sentences` (`original_id`, `from`, `to`, `computed`) values (?, ?, ?, ?)", (row[0], row[1], row[2], computed))
         line_count += 1
     print(f'Processed {line_count} lines.')
+    con.commit()
+    
 
-#sql_query = "select 1+1"
+#sql_query = `select 1+1`
 #con.execute(sql_query)
 
 #print(repr(con));
