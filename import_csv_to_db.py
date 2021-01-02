@@ -1,12 +1,4 @@
 from config.config import *
-import csv
-import sys
-import sqlite3
-import time
-import datetime
-import shutil
-#import path
-import os
 
 #Create backups dir (if not exists)
 if not os.path.exists(files['backups_dir']): os.makedirs(files['backups_dir'])
@@ -55,8 +47,9 @@ with open(files['input_csv_file'], mode='r') as csv_file:
     line_count = 0
     for row in csv_reader:
         computed = int(time.time())
-        result = cur.execute("insert into `sentences` (`original_id`, `from`, `to`, `computed`) values (?, ?, ?, ?)", (row[0], row[1], row[2], computed))
+        result = cur.execute("insert into `sentences` (`original_id`, `from`) values (?, ?)", (row[0], row[1]))
         line_count += 1
+        if line_count > 1000: break;
     print(f'Processed {line_count} lines.')
     con.commit()
     
