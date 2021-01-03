@@ -4,4 +4,8 @@ class SentenceParser():
         """Constructor"""
         self.sent = sent;
         pass
+    def get_translated(self)
+        "Return translated sencence"
+        pass
+    
 

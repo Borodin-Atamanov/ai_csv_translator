@@ -41,7 +41,7 @@ else:
     cur = con.cursor()
 
 
-#Read data from CSV and save it to SQLite3-database
+#Read data from CSV and load it to SQLite3-database
 with open(files['input_csv_file'], mode='r') as csv_file:
     csv_reader = csv.reader(csv_file)
     line_count = 0
@@ -53,9 +53,6 @@ with open(files['input_csv_file'], mode='r') as csv_file:
     print(f'Processed {line_count} lines.')
     con.commit()
     
+#TODO Read data from glossary CSV and load it to SQLite3-database
 
-#sql_query = `select 1+1`
-#con.execute(sql_query)
-
-#print(repr(con));
 
