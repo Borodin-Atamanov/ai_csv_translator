@@ -19,7 +19,9 @@ while True:
     sent = SentenceParser(from_sent)
     pprint(repr(sent))
     translated_sentence = sent.get_translated()
+    #перевод записывается обратно в базу, делается отметка о времени перевода
     #TODO save translated sentence to database
+    #TODO Записывается локальный кэш перевода
     time.sleep(0.4)
 
 #sent = SentenceParser()
