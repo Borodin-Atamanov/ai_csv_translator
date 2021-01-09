@@ -5,9 +5,12 @@ import time
 import datetime
 import shutil
 import os
+import pprint
 
 #Класс парсинга фраз перед и после перевода
 from sentence_parser import SentenceParser
+#Класс работы с базой
+from singleton_db import SingletonDB
 
 files = {
     "input_csv_file": 'input/tm.csv',
@@ -16,5 +19,5 @@ files = {
     
 }
 db = {
-    "sqlite3file": 'db/main.sqlite3db',
+    "sqlite3file": 'main.sqlite3db',
 }

@@ -3,3 +3,4 @@ logs/**
 *.pyc
 __pycache__
 backups
+push2git.sh
