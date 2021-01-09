@@ -1,9 +1,9 @@
 from config import *
 
-from pprint import pprint #Для отладки
-
-con = sqlite3.connect(db['sqlite3file'])
-cur = con.cursor()
+#Create new object to communicate with database
+db1 = SingletonDB()
+#Open connection to sqlite3 database file
+db1.open(db['sqlite3file'])
 
 #TODO использовать объект работы с БД для получения каждой следующей записи для перевода из базы
 #walk on untranslated sentences in DB, sent it to parser

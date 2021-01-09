@@ -5,7 +5,7 @@ import time
 import datetime
 import shutil
 import os
-import pprint
+#import pprint
 
 #Класс парсинга фраз перед и после перевода
 from sentence_parser import SentenceParser

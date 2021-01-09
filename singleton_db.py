@@ -35,11 +35,15 @@ class SingletonDB(object):
         return self.con.commit()
 
     def insert_new_untranslated_sentence(self, original_id, text):
-        "insert_new_untranslated_sentence to sentences table. original_id and text in arguments"
+        "insert new untranslated sentence to sentences table. original_id and text in arguments"
         print(original_id, text)
         result = self.cur.execute("insert into `sentences` (`original_id`, `from`) values (?, ?)", (original_id, text))
         print(result)
         return result
+
+    def get_next_untranslated_sentence(self):
+        "get next sentence where computed is null"
+        return True
 
     def create_all_new_tables(self):
         "Create all tables in new database"
