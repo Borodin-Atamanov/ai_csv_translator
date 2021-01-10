@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import datetime
 
 class SingletonDB(object):
     "Singleton Database class used for access database from any point of application"
@@ -18,21 +19,26 @@ class SingletonDB(object):
     def open(self, db_file):
         "Open connection to database"
         self.db_file = db_file
-        #Create new DataBase if it is not exists
+
+        all_new_tables_needed = 0
         if not os.path.exists(self.db_file): 
-            #Файла нет,создаём
-            self.con = sqlite3.connect(self.db_file)
-            self.cur = self.con.cursor()
+            #Файла нет, создаём все таблицы в базе данных
+            all_new_tables_needed = 1
+
+        self.con = sqlite3.connect(self.db_file)
+        #Set row result to dict instead of tuple - very useful and important for this application
+        self.con.row_factory = sqlite3.Row
+        self.cur = self.con.cursor()
+
+        if all_new_tables_needed == 1:
+            #Файла нет, создаём все таблицы в базе данных
             self.create_all_new_tables()
-        else:
-            #Just make connection to db
-            self.con = sqlite3.connect(self.db_file)
-            self.cur = self.con.cursor()
         return True
 
     def execute(self, query, arg=None):
         "Execute SQL query"
         if arg is not None:
+            print(' Arguments: ' + repr(arg))
             result = self.cur.execute(query, arg)
         else:
             result = self.cur.execute(query)
@@ -58,10 +64,21 @@ class SingletonDB(object):
         result = self.execute('SELECT * FROM `sentences` WHERE `computed` IS NULL ORDER BY `id` DESC')
         return self.get_row()
 
+    def save_translated_sentence(self, values_in_dict):
+        "Save translated sentence to database. Arguments: dict('id' - row id, 'to' - translated text"
+        #result = self.execute('SELECT * FROM `sentences` WHERE `computed` IS NULL ORDER BY `id` DESC')
+        values_in_dict['computed'] = int(datetime.datetime.now().timestamp())
+        result = self.execute('''UPDATE `sentences` SET `to`=:to, `computed`=:computed WHERE `id`=:id LIMIT 1''', values_in_dict)
+        self.commit()
+        return result
+
     def get_row(self):
         "Fetch one row and return it. None also can be returned"
-        row = self.cur.fetchone()
-        return row
+        self.last_row = self.cur.fetchone()
+        #create dict from 
+        row_dict = dict(zip(self.last_row.keys(), self.last_row))
+        #print(row['id'])
+        return row_dict
 
     def create_all_new_tables(self):
         "Create all tables in new database"

@@ -1,4 +1,5 @@
 from config import *
+import random
 
 #Create new object to communicate with database
 db1 = SingletonDB()
@@ -10,20 +11,23 @@ glosary = dict()
 
 #walk on untranslated sentences in DB, sent it to parser
 #Получить следующую запись для перевода от объекта DB в цикле пока не кончатся записи
-row = db1.get_next_untranslated_sentence()
-print(row)
-print(vars(db1))
-#print(vars(row))
-#print(repr(row))
+while True:
+    row = db1.get_next_untranslated_sentence()
+    #print(repr(row))
+    #print(vars(db1))
+    #id, original_id, from_sent = row[0], row[1], row[2]
+    #create parser object
+    sent = SentenceParser(row['from'])
+    #Производим перевод, передаём глоссарий в аргументах
+    translated_sentence = sent.get_translated(glosary)
+    row['to'] = translated_sentence
+    #TODO перевод записывается обратно в базу, делается отметка о времени перевода через объект DB
+    db1.save_translated_sentence(row)
+    time.sleep(0.4)
 
-id, original_id, from_sent = row[0], row[1], row[2]
-#create parser object
-sent = SentenceParser(from_sent)
-
-#print(vars(sent))
-#Производим перевод, передаём глоссарий в аргументах
-#translated_sentence = sent.get_translated(glosary)
-#TODO перевод записывается обратно в базу, делается отметка о времени перевода через объект DB
-time.sleep(0.4)
+    rnd = random.gauss(10, 1)
+    print(rnd)
+    if rnd >= 11:
+        break
 
 #sent = SentenceParser()

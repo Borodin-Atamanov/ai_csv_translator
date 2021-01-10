@@ -24,10 +24,10 @@ class SentenceParser():
 
     def parse(self):
         "Parse sentence into subsentences"
-        return true
+        return True
 
     def glossary_translate(self, glosary:dict):
         "find and replace by glossary"
-        return true
+        return True
     
 

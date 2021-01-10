@@ -25,5 +25,4 @@ with open(files['input_csv_file'], mode='r') as csv_file:
     db1.commit()
     
 #TODO Read data from glossary CSV and load it to SQLite3-database
-
 print(db1.__dict__)
