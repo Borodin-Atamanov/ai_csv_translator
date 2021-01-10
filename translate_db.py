@@ -5,28 +5,25 @@ db1 = SingletonDB()
 #Open connection to sqlite3 database file
 db1.open(db['sqlite3file'])
 
-#TODO использовать объект работы с БД для получения каждой следующей записи для перевода из базы
-#walk on untranslated sentences in DB, sent it to parser
-cur.execute('SELECT * FROM `sentences` WHERE `computed` IS NULL ORDER BY `id` DESC')
-#cur.execute('SELECT * FROM `sentences` WHERE `computed` IS NULL ORDER BY `id` ASC')
-
 #TODO получаем глоссарий из базы в виде словаря
 glosary = dict()
 
-while true:
-    row = cur.fetchone()
-    #TODO Получить следующую запись для перевода от объекта DB в цикле пока не кончатся записи
-    if row == None:
-        break
-    id, original_id, from_sent = row[0], row[1], row[2]
-    print(from_sent)
-    #create parser object
-    sent = SentenceParser(from_sent)
+#walk on untranslated sentences in DB, sent it to parser
+#Получить следующую запись для перевода от объекта DB в цикле пока не кончатся записи
+row = db1.get_next_untranslated_sentence()
+print(row)
+print(vars(db1))
+#print(vars(row))
+#print(repr(row))
 
-    pprint(vars(sent))
-    #Производим перевод, передаём глоссарий в аргументах
-    translated_sentence = sent.get_translated(glosary)
-    #TODO перевод записывается обратно в базу, делается отметка о времени перевода через объект DB
-    time.sleep(0.4)
+id, original_id, from_sent = row[0], row[1], row[2]
+#create parser object
+sent = SentenceParser(from_sent)
+
+#print(vars(sent))
+#Производим перевод, передаём глоссарий в аргументах
+#translated_sentence = sent.get_translated(glosary)
+#TODO перевод записывается обратно в базу, делается отметка о времени перевода через объект DB
+time.sleep(0.4)
 
 #sent = SentenceParser()

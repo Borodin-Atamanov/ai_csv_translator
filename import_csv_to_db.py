@@ -12,7 +12,6 @@ db1.open(db['sqlite3file'])
 #pprint(dir(db1))
 #print(dir(db1))
 #print(db1)
-print(db1.__dict__)
 
 #Read data from CSV and load it to SQLite3-database
 with open(files['input_csv_file'], mode='r') as csv_file:
@@ -27,3 +26,4 @@ with open(files['input_csv_file'], mode='r') as csv_file:
     
 #TODO Read data from glossary CSV and load it to SQLite3-database
 
+print(db1.__dict__)

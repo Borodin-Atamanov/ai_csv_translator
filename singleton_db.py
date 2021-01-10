@@ -30,20 +30,38 @@ class SingletonDB(object):
             self.cur = self.con.cursor()
         return True
 
+    def execute(self, query, arg=None):
+        "Execute SQL query"
+        if arg is not None:
+            result = self.cur.execute(query, arg)
+        else:
+            result = self.cur.execute(query)
+        self.rowcount = self.cur.rowcount
+        self.lastrowid = self.cur.lastrowid
+        self.description = self.cur.description
+        return result
+
     def commit(self):
         "Commit all changes to database"
         return self.con.commit()
 
     def insert_new_untranslated_sentence(self, original_id, text):
         "insert new untranslated sentence to sentences table. original_id and text in arguments"
-        print(original_id, text)
-        result = self.cur.execute("insert into `sentences` (`original_id`, `from`) values (?, ?)", (original_id, text))
-        print(result)
+        #print(original_id, text)
+        #result = self.cur.execute("insert into `sentences` (`original_id`, `from`) values (?, ?)", (original_id, text))
+        result = self.execute("insert into `sentences` (`original_id`, `from`) values (?, ?)", (original_id, text))
         return result
 
     def get_next_untranslated_sentence(self):
         "get next sentence where computed is null"
-        return True
+        #walk on untranslated sentences
+        result = self.execute('SELECT * FROM `sentences` WHERE `computed` IS NULL ORDER BY `id` DESC')
+        return self.get_row()
+
+    def get_row(self):
+        "Fetch one row and return it. None also can be returned"
+        row = self.cur.fetchone()
+        return row
 
     def create_all_new_tables(self):
         "Create all tables in new database"
