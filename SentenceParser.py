@@ -29,11 +29,11 @@ class SentenceParser():
         self.get_translation_from_internet()
         #TODO Отправляет строку на перевод через объект перевода, получаем готовый перевод
 
-        #TODO превратить переводобезопасные символы обратно в теги
-        self.convert_safety_chars_to_tags_back()
-
         #TODO Записывается результат перевода в локальный кэш
         self.save_translation_to_cache()
+
+        #TODO превратить переводобезопасные символы обратно в теги
+        self.convert_safety_chars_to_tags_back()
 
         #Возвращаем полученный перевод
         return 'Perevod na angliysky yazik'
