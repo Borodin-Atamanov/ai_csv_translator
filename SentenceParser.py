@@ -1,9 +1,12 @@
+from bs4 import BeautifulSoup
+import html5lib
 
 class SentenceParser():
     "SentenceParser class used for parse tags and none-tags before and after translation"
     def __init__(self, sent:str):
         """Constructor"""
         self.sent = sent;
+        self.output = None;
 
     def get_translated(self, glosary):
         "Return translated sencence"
@@ -36,10 +39,14 @@ class SentenceParser():
         self.convert_safety_chars_to_tags_back()
 
         #Возвращаем полученный перевод
-        return 'Perevod na angliysky yazik'
+        #return 'Perevod na angliysky yazik'
+        return self.output
 
     def parse(self):
         "Parse sentence into subsentences"
+        self.soup = BeautifulSoup(self.sent, "html.parser")
+        self.output = self.soup.prettify(formatter="minimal")
+        self.output = str(self.soup)
         return True
 
     def glossary_translate(self, glosary:dict):
