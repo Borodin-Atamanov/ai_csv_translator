@@ -2,7 +2,7 @@
 fps=1;
 ffmpeg_path='ffmpeg';
 NEWDIR="$HOME/timelapse/";
-CUR_RESOLUTION=`xdpyinfo | grep 'dimensions:'|awk '{print $2}'`;
+CUR_RESOLUTION=`xdpyinfo | grep 'dimensions:'| awk '{print $2}'`;
 echo $CUR_RESOLUTION;
 mkdir -p "$NEWDIR";
 cd "$NEWDIR";

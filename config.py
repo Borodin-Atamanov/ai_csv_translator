@@ -8,9 +8,13 @@ import os
 #import pprint
 
 #Класс парсинга фраз перед и после перевода
-from sentence_parser import SentenceParser
+from SentenceParser import SentenceParser
 #Класс работы с базой
-from singleton_db import SingletonDB
+from SingletonDB import SingletonDB
+#Класс обращения к службам онлайн-перевода через платный API
+from TranslatorOnline import TranslatorOnline
+#Класс локального кеширования полученных переводов, чтобы лишний раз не платить
+from TranslationCacher import TranslationCacher
 
 files = {
     "input_csv_file": 'input/tm.csv',
