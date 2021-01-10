@@ -26,7 +26,7 @@ while True:
     time.sleep(0.4)
 
     rnd = random.gauss(10, 1)
-    print(rnd)
+    #print(rnd)
     if rnd >= 11:
         break
 

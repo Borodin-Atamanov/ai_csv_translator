@@ -20,9 +20,10 @@ with open(files['input_csv_file'], mode='r') as csv_file:
     for row in csv_reader:
         db1.insert_new_untranslated_sentence(row[0], row[1])
         line_count += 1
-        if line_count > 1000: break;
+        if line_count > 1000:
+            break;
     print(f'Processed {line_count} lines.')
     db1.commit()
-    
+
 #TODO Read data from glossary CSV and load it to SQLite3-database
 print(db1.__dict__)

@@ -8,11 +8,9 @@ class SentenceParser():
     def get_translated(self, glosary):
         "Return translated sencence"
         self.glosary = glosary
+
         #Выполняем парсинг фразы
         self.parse()
-
-        #Переводим по глоссарию
-        self.glossary_translate(glosary)
 
         #TODO2 половые теги удалены: заменены на первый вариант, фигурные скобки заменены на переводобезопасные символы (может просто удалить всё от символа '|' до символа '}, удалить символ '{')
         self.convert_sex_tags_to_first_comer()
@@ -20,10 +18,13 @@ class SentenceParser():
         #TODO получаем единственную фразу, в которой все теги заменены на безопасные для перевода символы
         self.convert_tags_to_safety_chars()
 
+        #Переводим по глоссарию
+        self.glossary_translate(glosary)
+
         #TODO Пробуем получить перевод из кеша переводов
         self.get_translation_from_cache()
-        #Если в кеше точный перевод не нашёлся:
 
+        #Если в кеше точный перевод не нашёлся:
         #TODO создаём объект онлайн-перевода
         self.get_translation_from_internet()
         #TODO Отправляет строку на перевод через объект перевода, получаем готовый перевод
