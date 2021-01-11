@@ -74,9 +74,8 @@ class SentenceParser():
         self.find_start_end_of_the_tag(regex)
 
         #слить соседние теги воедино: если окончание тега рядом с началом следующего - то записать единое начало-конец
-        for x in self.tags_start_end:
-            self.join_tags_starts_ends()    #НЕ РАБОТАЕТ! ;(
-            print("\n\n");
+        for i in self.tags_start_end
+            self.join_tags_starts_ends()
         print(repr(self.tags_start_end))
         return True
 
@@ -107,41 +106,43 @@ class SentenceParser():
         self.tags_start_end = new_tags_start_end
         return self.tags_start_end
 
-    def join_tags_starts_ends(self):#НЕ РАБОТАЕТ! ;(
+    def join_tags_starts_ends(self):
         "Method joins start and end position of tags together if they stays together (end of one tag is start of another)"
         #отсортировать все теги по позиции начала
         self.sort_tags_starts_ends()
-        new_tags_start_end = {}
+        new_tags_start_end = list()
+        for ikey in self.tags_start_end:
+            new_tags_start_end.append(self.tags_start_end[ikey])
+
+        self.tags_start_end = new_tags_start_end
+        print(self.tags_start_end)
+
+        new_tags_start_end = list()
         #Проходимся по всем тегам, находим стоящие рядом, объединяем в новый словарь
         #Стоящие рядом теги - это такие у которых start следующего равен end позиции предыдущего
-        prev_key = None
-        for key in deepcopy(self.tags_start_end):
-            if prev_key is not None:
-                #TODO Как именно добавлять в новый массив позиции стоящих рядом тегов?
-                if self.tags_start_end[prev_key]['end'] == self.tags_start_end[key]['start']:
-                    #
-                    print (self.tags_start_end[prev_key]['end'], self.tags_start_end[key]['start'])
-                    new_key = prev_key + '+' + key
-                    new_tags_start_end[new_key] = {}
-                    new_tags_start_end[new_key]['start'] = self.tags_start_end[prev_key]['start']
-                    new_tags_start_end[new_key]['end'] = self.tags_start_end[key]['end']
-                    new_tags_start_end[new_key]['group'] = new_key
-                    #Delete prev_key
-                    print('Delete prev_key="'+prev_key+'"', new_tags_start_end)
-                    if prev_key in new_tags_start_end.keys():
-                        #del new_tags_start_end[prev_key]
-                        pass
-                    else:
-                        print ('prev_key '+prev_key+' doesnt exists!')
-
+        x=0
+        while x < len(self.tags_start_end):
+            if x>0:
+                #if self.tags_start_end[prev_key]['end'] == self.tags_start_end[key]['start']:
+                if self.tags_start_end[x-1]['end'] == self.tags_start_end[x]['start']:
+                    #Позиция окончания прошлого тега совпадает с позицией старта следующего - объединим их в один
+                    #delete 1 last element
+                    new_tags_start_end.pop()
+                    #Add new element (совмещающий два рядом стоящих тега)
+                    new_tags_start_end.append({
+                        'start':self.tags_start_end[x]['start'],
+                        'end':self.tags_start_end[x-1]['end']
+                    })
                 else:
-                    new_tags_start_end[key] = self.tags_start_end[key]
-            prev_key = key
-            print (self.tags_start_end[key])
-        self.tags_start_end = new_tags_start_end
+                    new_tags_start_end.append({
+                        'start':self.tags_start_end[x]['start'],
+                        'end':self.tags_start_end[x]['end']
+                    })
 
-        for key in self.tags_start_end:
-            print (self.tags_start_end[key])
+            print(x, self.tags_start_end[x])
+            x = x+1
+        self.tags_start_end = new_tags_start_end
+        print(self.tags_start_end)
 
         return True
 
