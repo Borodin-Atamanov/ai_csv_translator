@@ -1,12 +1,15 @@
 from bs4 import BeautifulSoup
 import re
+#from pprint import pprint
+import json
 
 class SentenceParser():
     "SentenceParser class used for parse tags and none-tags before and after translation"
     def __init__(self, sent:str):
         """Constructor"""
-        self.sent = sent;
-        self.output = None;
+        self.sent = sent
+        self.output = None
+        self.tags_start_end = {}
 
     def get_translated(self, glosary):
         "Return translated sencence"
@@ -48,17 +51,43 @@ class SentenceParser():
         self.output = self.soup.prettify(formatter="minimal")
         self.output = str(self.soup)
         #находить HTML-теги по символам <>, жадно добавлять пробельные символы рядом с тегами
-        #result = re.search("\<", self.output)
-        #print(repr(result))
-        #dict to save start and end positions of t
-        tags_start_end = {}
-        regul = re.compile(r'<.*?>')
-        for reg_obj in regul.finditer(self.output):
-            #print(reg_obj.span(), reg_obj.group())
-            tags_start_end[reg_obj.start()] = reg_obj.end()
 
-        print(tags_start_end)
+        #Все HTML-теги: от < до > и пробельные символы до и после тега
+        regex = r'\s*<.*?>\s*';
+        self.find_start_end_of_the_tag(regex)
+        #Все %%-теги от % до % и пробельные символы до и после тега
+        #TODO проверить работу этой регулярки! (Сейчас поведение не предсказуемо!)
+        regex = r'\s*%.*?%\s*';
+        self.find_start_end_of_the_tag(regex)
+        print(repr(self.tags_start_end))
+
+        self.join_tags_starts_ends()
+        #TODO слить соседние теги воедино: если окончание тега рядом с началом следующего - то записать единое начало-конец
         return True
+
+    def find_start_end_of_the_tag(self, regex:str):
+        "Method return dict with start and end positions of found tags"
+        regul = re.compile(regex, re.DOTALL)
+        for reg_obj in regul.finditer(self.output):
+            #dict to save start and end positions of tag
+            tags_start_end_local = {}
+            tags_start_end_local['start'] = reg_obj.start()
+            tags_start_end_local['end'] = reg_obj.end()
+            tags_start_end_local['group'] = reg_obj.group()
+            key = str(str(tags_start_end_local['start']) + '-' + str(tags_start_end_local['end']))
+            key = str(str(tags_start_end_local['start']) + '-' + str(tags_start_end_local['end']) + '-' + reg_obj.group())
+            #print(key, tags_start_end_local)
+            self.tags_start_end[key] = tags_start_end_local;
+        return True
+
+    def join_tags_starts_ends(self):
+        "Method joins start and end position of tags together if they stays together (end of one tag is start of another)"
+        #TODO отсортировать все теги по позиции начала
+        #self.tags_start_end = sorted(self.tags_start_end, key=lambda x: int(x['start']))
+        #for value in self.tags_start_end.values():
+        #    value.sort(key=lambda x: int(x['end']))
+
+        return self.tags_start_end
 
     def glossary_translate(self, glosary:dict):
         "find and replace by glossary"
