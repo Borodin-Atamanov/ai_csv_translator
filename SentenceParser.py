@@ -109,8 +109,12 @@ class SentenceParser():
         "Method joins start and end position of tags together if they stays together (end of one tag is start of another)"
         #отсортировать все теги по позиции начала
         self.sort_tags_starts_ends()
+        new_tags_start_end = {}
         #Проходимся по всем тегам, находим стоящие рядом, объединяем в новый словарь
+        #Стоящие рядом теги - это такие у которых start предыдущего равен end позиции следующего
         for key in self.tags_start_end:
+            print (self.tags_start_end.get(key, 0)['start'], self.tags_start_end.get(prev_key, 0)['end'])
+            prev_key = key
             print (self.tags_start_end[key])
 
     def glossary_translate(self, glosary:dict):
