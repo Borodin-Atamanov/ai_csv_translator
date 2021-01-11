@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import re
 #from pprint import pprint
-#import json
+import json
 from copy import deepcopy
 
 class SentenceParser():
@@ -74,7 +74,7 @@ class SentenceParser():
         self.find_start_end_of_the_tag(regex)
 
         #слить соседние теги воедино: если окончание тега рядом с началом следующего - то записать единое начало-конец
-        for i in self.tags_start_end
+        for i in self.tags_start_end:
             self.join_tags_starts_ends()
         print(repr(self.tags_start_end))
         return True
@@ -95,27 +95,20 @@ class SentenceParser():
 
     def sort_tags_starts_ends(self):
         "Method sort tags_start_end by start position"
+        #self.tags_start_end = dict(self.tags_start_end)
         #отсортировать все теги по позиции начала
-        tags_keys_in_sorted_order = sorted(self.tags_start_end, key=lambda x: int(self.tags_start_end[x]['start']), reverse=False) #Сортирует, но возвращает только list ключей, не dict значений
-        new_tags_start_end = {}
-        #Проходимся в цикле по списку tags_keys_in_correct_order, создаём новый словарь данных, куда записываем данные из словаря self.tags_start_end но в порядке ключей из tags_keys_in_sorted_order
-        for ikey in tags_keys_in_sorted_order:
-            #print(ikey)
-            new_tags_start_end[ikey] = self.tags_start_end[ikey]
-        #Установим отсортированный список тегов в свойства объекта
-        self.tags_start_end = new_tags_start_end
+        #tags_keys_in_sorted_order = sorted(self.tags_start_end, key=lambda x: int(self.tags_start_end[x]['start']), reverse=False) #Сортирует, но возвращает только list ключей, не dict значений
+        #self.tags_start_end = sorted(self.tags_start_end, key=lambda x: x['start'], reverse=False)
+        #self.tags_start_end = sorted(self.tags_start_end, key = lambda item: item['start'])
+        self.tags_start_end = sorted(self.tags_start_end)
+
         return self.tags_start_end
 
     def join_tags_starts_ends(self):
         "Method joins start and end position of tags together if they stays together (end of one tag is start of another)"
         #отсортировать все теги по позиции начала
         self.sort_tags_starts_ends()
-        new_tags_start_end = list()
-        for ikey in self.tags_start_end:
-            new_tags_start_end.append(self.tags_start_end[ikey])
-
-        self.tags_start_end = new_tags_start_end
-        print(self.tags_start_end)
+        #new_tags_start_end = list(self.tags_start_end)
 
         new_tags_start_end = list()
         #Проходимся по всем тегам, находим стоящие рядом, объединяем в новый словарь
@@ -124,6 +117,8 @@ class SentenceParser():
         while x < len(self.tags_start_end):
             if x>0:
                 #if self.tags_start_end[prev_key]['end'] == self.tags_start_end[key]['start']:
+                print('::: ', json.dumps(self.tags_start_end, sort_keys=True, indent=4) )
+                exit()
                 if self.tags_start_end[x-1]['end'] == self.tags_start_end[x]['start']:
                     #Позиция окончания прошлого тега совпадает с позицией старта следующего - объединим их в один
                     #delete 1 last element
