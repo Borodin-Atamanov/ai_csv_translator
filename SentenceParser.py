@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-import html5lib
+import re
 
 class SentenceParser():
     "SentenceParser class used for parse tags and none-tags before and after translation"
@@ -47,6 +47,17 @@ class SentenceParser():
         self.soup = BeautifulSoup(self.sent, "html.parser")
         self.output = self.soup.prettify(formatter="minimal")
         self.output = str(self.soup)
+        #находить HTML-теги по символам <>, жадно добавлять пробельные символы рядом с тегами
+        #result = re.search("\<", self.output)
+        #print(repr(result))
+        #dict to save start and end positions of t
+        tags_start_end = {}
+        regul = re.compile(r'<.*?>')
+        for reg_obj in regul.finditer(self.output):
+            #print(reg_obj.span(), reg_obj.group())
+            tags_start_end[reg_obj.start()] = reg_obj.end()
+
+        print(tags_start_end)
         return True
 
     def glossary_translate(self, glosary:dict):
