@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 import re
 #from pprint import pprint
 #import json
-import functools
+from copy import deepcopy
 
 class SentenceParser():
     "SentenceParser class used for parse tags and none-tags before and after translation"
@@ -74,8 +74,10 @@ class SentenceParser():
         self.find_start_end_of_the_tag(regex)
 
         #слить соседние теги воедино: если окончание тега рядом с началом следующего - то записать единое начало-конец
-        self.join_tags_starts_ends()
-        #print(repr(self.tags_start_end))
+        for x in self.tags_start_end:
+            self.join_tags_starts_ends()    #НЕ РАБОТАЕТ! ;(
+            print("\n\n");
+        print(repr(self.tags_start_end))
         return True
 
     def find_start_end_of_the_tag(self, regex:str):
@@ -105,17 +107,43 @@ class SentenceParser():
         self.tags_start_end = new_tags_start_end
         return self.tags_start_end
 
-    def join_tags_starts_ends(self):
+    def join_tags_starts_ends(self):#НЕ РАБОТАЕТ! ;(
         "Method joins start and end position of tags together if they stays together (end of one tag is start of another)"
         #отсортировать все теги по позиции начала
         self.sort_tags_starts_ends()
         new_tags_start_end = {}
         #Проходимся по всем тегам, находим стоящие рядом, объединяем в новый словарь
-        #Стоящие рядом теги - это такие у которых start предыдущего равен end позиции следующего
-        for key in self.tags_start_end:
-            print (self.tags_start_end.get(key, 0)['start'], self.tags_start_end.get(prev_key, 0)['end'])
+        #Стоящие рядом теги - это такие у которых start следующего равен end позиции предыдущего
+        prev_key = None
+        for key in deepcopy(self.tags_start_end):
+            if prev_key is not None:
+                #TODO Как именно добавлять в новый массив позиции стоящих рядом тегов?
+                if self.tags_start_end[prev_key]['end'] == self.tags_start_end[key]['start']:
+                    #
+                    print (self.tags_start_end[prev_key]['end'], self.tags_start_end[key]['start'])
+                    new_key = prev_key + '+' + key
+                    new_tags_start_end[new_key] = {}
+                    new_tags_start_end[new_key]['start'] = self.tags_start_end[prev_key]['start']
+                    new_tags_start_end[new_key]['end'] = self.tags_start_end[key]['end']
+                    new_tags_start_end[new_key]['group'] = new_key
+                    #Delete prev_key
+                    print('Delete prev_key="'+prev_key+'"', new_tags_start_end)
+                    if prev_key in new_tags_start_end.keys():
+                        #del new_tags_start_end[prev_key]
+                        pass
+                    else:
+                        print ('prev_key '+prev_key+' doesnt exists!')
+
+                else:
+                    new_tags_start_end[key] = self.tags_start_end[key]
             prev_key = key
             print (self.tags_start_end[key])
+        self.tags_start_end = new_tags_start_end
+
+        for key in self.tags_start_end:
+            print (self.tags_start_end[key])
+
+        return True
 
     def glossary_translate(self, glosary:dict):
         "find and replace by glossary"
