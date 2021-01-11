@@ -1,7 +1,8 @@
 from bs4 import BeautifulSoup
 import re
 #from pprint import pprint
-import json
+#import json
+import functools
 
 class SentenceParser():
     "SentenceParser class used for parse tags and none-tags before and after translation"
@@ -50,19 +51,30 @@ class SentenceParser():
         self.soup = BeautifulSoup(self.sent, "html.parser")
         self.output = self.soup.prettify(formatter="minimal")
         self.output = str(self.soup)
-        #находить HTML-теги по символам <>, жадно добавлять пробельные символы рядом с тегами
+        self.output = self.sent #Don't change HTML-entities to UTF8-chars
 
         #Все HTML-теги: от < до > и пробельные символы до и после тега
         regex = r'\s*<.*?>\s*';
         self.find_start_end_of_the_tag(regex)
+
         #Все %%-теги от % до % и пробельные символы до и после тега
         #TODO проверить работу этой регулярки! (Сейчас поведение не предсказуемо!)
-        regex = r'\s*%.*?%\s*';
+        #Исправить регулярку так, чтобы она не включала русские буквы между символами %%
+        #TODO ограничить длину строки между %%
+        regex = r'\s*%[^А-я]*?%\s*';
         self.find_start_end_of_the_tag(regex)
-        print(repr(self.tags_start_end))
 
+        #HTML-сущности цифровые
+        regex = r'\s*&#\d{,7};\s*';
+        self.find_start_end_of_the_tag(regex)
+
+        #HTML-сущности буквенные
+        regex = r'\s*&[a-zA-Z]{,7};\s*';
+        self.find_start_end_of_the_tag(regex)
+
+        #слить соседние теги воедино: если окончание тега рядом с началом следующего - то записать единое начало-конец
         self.join_tags_starts_ends()
-        #TODO слить соседние теги воедино: если окончание тега рядом с началом следующего - то записать единое начало-конец
+        #print(repr(self.tags_start_end))
         return True
 
     def find_start_end_of_the_tag(self, regex:str):
@@ -74,20 +86,31 @@ class SentenceParser():
             tags_start_end_local['start'] = reg_obj.start()
             tags_start_end_local['end'] = reg_obj.end()
             tags_start_end_local['group'] = reg_obj.group()
-            key = str(str(tags_start_end_local['start']) + '-' + str(tags_start_end_local['end']))
             key = str(str(tags_start_end_local['start']) + '-' + str(tags_start_end_local['end']) + '-' + reg_obj.group())
-            #print(key, tags_start_end_local)
             self.tags_start_end[key] = tags_start_end_local;
+        self.sort_tags_starts_ends()    #sort tags dict
         return True
+
+    def sort_tags_starts_ends(self):
+        "Method sort tags_start_end by start position"
+        #отсортировать все теги по позиции начала
+        tags_keys_in_sorted_order = sorted(self.tags_start_end, key=lambda x: int(self.tags_start_end[x]['start']), reverse=False) #Сортирует, но возвращает только list ключей, не dict значений
+        new_tags_start_end = {}
+        #Проходимся в цикле по списку tags_keys_in_correct_order, создаём новый словарь данных, куда записываем данные из словаря self.tags_start_end но в порядке ключей из tags_keys_in_sorted_order
+        for ikey in tags_keys_in_sorted_order:
+            #print(ikey)
+            new_tags_start_end[ikey] = self.tags_start_end[ikey]
+        #Установим отсортированный список тегов в свойства объекта
+        self.tags_start_end = new_tags_start_end
+        return self.tags_start_end
 
     def join_tags_starts_ends(self):
         "Method joins start and end position of tags together if they stays together (end of one tag is start of another)"
-        #TODO отсортировать все теги по позиции начала
-        #self.tags_start_end = sorted(self.tags_start_end, key=lambda x: int(x['start']))
-        #for value in self.tags_start_end.values():
-        #    value.sort(key=lambda x: int(x['end']))
-
-        return self.tags_start_end
+        #отсортировать все теги по позиции начала
+        self.sort_tags_starts_ends()
+        #Проходимся по всем тегам, находим стоящие рядом, объединяем в новый словарь
+        for key in self.tags_start_end:
+            print (self.tags_start_end[key])
 
     def glossary_translate(self, glosary:dict):
         "find and replace by glossary"
