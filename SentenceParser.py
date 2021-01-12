@@ -1,8 +1,10 @@
 from bs4 import BeautifulSoup
 import re
 #from pprint import pprint
-import json
+#import json
 from copy import deepcopy
+import numpy as np
+import pandas as pd
 
 class SentenceParser():
     "SentenceParser class used for parse tags and none-tags before and after translation"
@@ -53,9 +55,16 @@ class SentenceParser():
         self.output = str(self.soup)
         self.output = self.sent #Don't change HTML-entities to UTF8-chars
 
+        self.tags_dataframe = pd.DataFrame(data={}, index=['id'],  columns=['id', 'start', 'end', 'text'], copy=True)
+
+
         #Все HTML-теги: от < до > и пробельные символы до и после тега
         regex = r'\s*<.*?>\s*';
         self.find_start_end_of_the_tag(regex)
+
+        print(self.tags_dataframe)
+        print(self.tags_dataframe.describe(include='all'))
+        print(self.tags_dataframe.info(verbose=True))
 
         #Все %%-теги от % до % и пробельные символы до и после тега
         #Между %% не может быть киррилица!
@@ -74,9 +83,7 @@ class SentenceParser():
         self.find_start_end_of_the_tag(regex)
 
         #слить соседние теги воедино: если окончание тега рядом с началом следующего - то записать единое начало-конец
-        for i in self.tags_start_end:
-            self.join_tags_starts_ends()
-        print(repr(self.tags_start_end))
+        self.join_tags_starts_ends()
         return True
 
     def find_start_end_of_the_tag(self, regex:str):
@@ -90,19 +97,22 @@ class SentenceParser():
             tags_start_end_local['group'] = reg_obj.group()
             key = str(str(tags_start_end_local['start']) + '-' + str(tags_start_end_local['end']) + '-' + reg_obj.group())
             self.tags_start_end[key] = tags_start_end_local;
+            #add this new data to pandas dataframe
+            self.tags_dataframe = self.tags_dataframe.append(tags_start_end_local, ignore_index=True)
+
         self.sort_tags_starts_ends()    #sort tags dict
+
         return True
 
     def sort_tags_starts_ends(self):
         "Method sort tags_start_end by start position"
         #self.tags_start_end = dict(self.tags_start_end)
         #отсортировать все теги по позиции начала
-        #tags_keys_in_sorted_order = sorted(self.tags_start_end, key=lambda x: int(self.tags_start_end[x]['start']), reverse=False) #Сортирует, но возвращает только list ключей, не dict значений
-        #self.tags_start_end = sorted(self.tags_start_end, key=lambda x: x['start'], reverse=False)
-        #self.tags_start_end = sorted(self.tags_start_end, key = lambda item: item['start'])
-        self.tags_start_end = sorted(self.tags_start_end)
 
-        return self.tags_start_end
+        #self.tags_start_end = sorted(self.tags_start_end)
+        self.tags_dataframe.sort_values(by='start', ascending=True, inplace=True, ignore_index=True)
+
+        return self.tags_dataframe
 
     def join_tags_starts_ends(self):
         "Method joins start and end position of tags together if they stays together (end of one tag is start of another)"
@@ -110,34 +120,21 @@ class SentenceParser():
         self.sort_tags_starts_ends()
         #new_tags_start_end = list(self.tags_start_end)
 
-        new_tags_start_end = list()
-        #Проходимся по всем тегам, находим стоящие рядом, объединяем в новый словарь
-        #Стоящие рядом теги - это такие у которых start следующего равен end позиции предыдущего
-        x=0
-        while x < len(self.tags_start_end):
-            if x>0:
-                #if self.tags_start_end[prev_key]['end'] == self.tags_start_end[key]['start']:
-                print('::: ', json.dumps(self.tags_start_end, sort_keys=True, indent=4) )
-                exit()
-                if self.tags_start_end[x-1]['end'] == self.tags_start_end[x]['start']:
-                    #Позиция окончания прошлого тега совпадает с позицией старта следующего - объединим их в один
-                    #delete 1 last element
-                    new_tags_start_end.pop()
-                    #Add new element (совмещающий два рядом стоящих тега)
-                    new_tags_start_end.append({
-                        'start':self.tags_start_end[x]['start'],
-                        'end':self.tags_start_end[x-1]['end']
-                    })
-                else:
-                    new_tags_start_end.append({
-                        'start':self.tags_start_end[x]['start'],
-                        'end':self.tags_start_end[x]['end']
-                    })
-
-            print(x, self.tags_start_end[x])
-            x = x+1
-        self.tags_start_end = new_tags_start_end
-        print(self.tags_start_end)
+        #В цикле проходимся по tags_dataframe, проверяем, что
+        #Теги являются соседними (конец одного находится в начале другого)
+        #Добавляем теги, которые вместе находятся в новый датафрейм
+        prev_row = None
+        row = True
+        while row:
+            row = next(self.tags_dataframe.iterrows())
+            print(row)
+            prev_row = deepcopy(row)
+            if prev_row is not None:
+                #Проверяем, являются ли последние два тега соседними
+                print (prev_row)
+        #for label, content in self.tags_dataframe.items():
+        #    print(f'label: {label}')
+        #    print(f'content: {content}', sep='\n')
 
         return True
 
