@@ -89,7 +89,7 @@ class SentenceParser():
         regul = re.compile(regex, re.DOTALL)
         for reg_obj in regul.finditer(self.output):
             #dict to save start and end positions of tag
-            key = len(self.tags_start_end)*10
+            key = len(self.tags_start_end)
             self.tags_start_end[key] = {}
             self.tags_start_end[key]['start'] = reg_obj.start()
             self.tags_start_end[key]['end'] = reg_obj.end()
@@ -118,6 +118,51 @@ class SentenceParser():
         new_tags_start_end = {} #Новый словарь для объединённых тегов
 
         print("join_tags_starts_ends()")
+
+        #TODO Объединяем теги, которые стоят рядом или накладываются друг на друга
+        #Вложенные циклы проверки наложения или соседства тегов
+        delete_this_keys = set()
+        for keya in tuple(self.tags_start_end):
+            for keyb in tuple(self.tags_start_end):
+                #Проверяем, являются ли последние два тега пересекающимися, соседними
+                #Теги объединяются, если начало или конец одного тега лежит внутри другого тега
+                mina = min(
+                self.tags_start_end[keya]['start'],
+                self.tags_start_end[keya]['end'])
+                maxa = max(
+                self.tags_start_end[keya]['start'],
+                self.tags_start_end[keya]['end'])
+                minb = min(
+                self.tags_start_end[keyb]['start'],
+                self.tags_start_end[keyb]['end'])
+                maxb = max(
+                self.tags_start_end[keyb]['start'],
+                self.tags_start_end[keyb]['end'])
+
+                if (mina <= minb <= maxa) or (mina <= maxb <= maxa):
+                    #теги соседние и(ли) пересекаются, объединим их в один тег
+                    new_key = len(self.tags_start_end)
+                    new_joined_tag = {}
+                    new_joined_tag['start'] = min(mina, minb)
+                    new_joined_tag['end'] = max(maxa, maxb)
+                    self.tags_start_end[new_key] = new_joined_tag
+                    #print ("Соединяем тег в ", new_joined_tag);
+
+                    #Удалим исходные теги, (останется только новый объединённый тег)
+                    delete_this_keys.add(keya)
+                    delete_this_keys.add(keyb)
+                    pass
+                else:
+                    #Теги не соседние
+                    pass
+
+        print("Удаляем объединённые теги: ")
+        delete_this_keys = sorted(set(delete_this_keys))
+        print (delete_this_keys)
+        for key in delete_this_keys:
+            #print ('Удаляем ', key, type(key))
+            del self.tags_start_end[key]
+
         #В цикле проходимся по self.tags_start_end, проверяем, что
         #Теги являются соседними (конец одного находится в начале другого)
         #Добавляем теги, которые вместе находятся в новый словарь
@@ -132,8 +177,14 @@ class SentenceParser():
                     new_key = len(self.tags_start_end)
 
                     new_joined_tag = {}
-                    mini = min(self.tags_start_end[prev_key]['start'], self.tags_start_end[key]['end'])
-                    maxi = max(self.tags_start_end[prev_key]['start'], self.tags_start_end[key]['end'])
+                    mini = min(
+                        self.tags_start_end[prev_key]['start'], self.tags_start_end[prev_key]['end'],
+                        self.tags_start_end[key]['start'],
+                        self.tags_start_end[key]['end'])
+                    maxi = max(
+                        self.tags_start_end[prev_key]['start'], self.tags_start_end[prev_key]['end'],
+                        self.tags_start_end[key]['start'],
+                        self.tags_start_end[key]['end'])
                     new_joined_tag['start'] = mini
                     new_joined_tag['end'] = maxi
                     #new_joined_tag['join'] = {1: self.tags_start_end[prev_key], 2: self.tags_start_end[key]}
@@ -150,7 +201,7 @@ class SentenceParser():
             prev_key = key
 
         self.sort_tags_starts_ends()
-        #self.show_tags()
+        self.show_tags()
         #Удаляем теги, которые были объединены в один
         print("!!! Удаляем !!!")
         delete_this_keys = sorted(set(delete_this_keys))
@@ -161,8 +212,6 @@ class SentenceParser():
 
         print("!!! После удаления !!!")
         self.sort_tags_starts_ends()
-        self.show_tags()
-
         self.show_tags()
 
         return True
