@@ -96,15 +96,43 @@ class SentenceParser():
     def convert_tags_to_safety_chars(self):
         "Method change all tags in self.output to safety-for-translation chars, save table of this translation"
         #Результат работы метода - массив соответствия исходных тегов и безопасных для онлайн-перевода self.tags_safety_replacement и изменённая строка данных (где исходные теги заменены на безопасные для перевода временные последовательности)
-        #Проходимся по тегам, от конца в начало, генерируем безопасные-для перевода замены
         print ("\n\n")
+        self.tags_safety_replacement = {}
+
 
         #Символ, безопасный для перевода
-        s=config.config['translation']['safety_for_translation_sign']
-        c=config.config['translation']['minimum_safety_for_translation_chars'] #Минимальное Количество символов, безопасных для перевода и замены в тегах
-        for key in tuple(sorted(self.tags_start_end, reverse=True)):
-            print(key, self.tags_start_end[key])
+        si=config.config['translation']['safety_for_translation_sign']
+        #Минимальное Количество символов, безопасных для перевода и замены в тегах
+        cs=config.config['translation']['minimum_safety_for_translation_chars']
 
+        #Проходимся по тегам, от конца в начало, генерируем безопасные-для перевода замены
+        i=0
+        for key in tuple(sorted(self.tags_start_end, reverse=True)):
+            i+=1
+            code = si*(i+cs) #repeat si string i+cs times
+            print(code, self.tags_start_end[key])
+            self.tags_safety_replacement[code] = self.tags_start_end[key]['text']
+
+        print (self.tags_safety_replacement)
+        #new_tags_safety_replacement = {}
+        #for key in tuple(sorted(self.tags_safety_replacement, reverse=False)):
+            #new_tags_safety_replacement[key] = self.tags_safety_replacement[key]
+        ##self.tags_safety_replacement = {reversed(self.tags_safety_replacement)}
+        #self.tags_safety_replacement = new_tags_safety_replacement
+
+        #Проводим замену тегов на временные переводо-безопасные коды
+        #Как лучше менять?
+        #Может быть разобраться строку на массив подстрок, и менять по индексу? Или всё же по содержимому? Да, менять по содержимому - страшно, ведь одни теги могут включать в себя другие, однако, можно попробовать, вдруг будет нормально и данные не пострадают?
+        #Не, всё же нужно заменять поэлементно, а не заменять "все найденные вхождения"
+        #Чувствую, что есть какой-то более простой способ, но я не могу до него додуматься...
+        print(self.tags_safety_replacement)
+
+        #TODO Преобразовывать исходную строку в массив, для каждого индекса массива определять - является ли он тегом (подлежащим переводу в переводобезопасный код) или текстом
+
+        for key in tuple(sorted(self.tags_safety_replacement, reverse=False)):
+            self.sent[1] = self.sent[1].replace(self.tags_safety_replacement[key], key)
+
+        print (self.sent[1])
         return True
 
     def find_start_end_of_the_tag(self, regex:str):
