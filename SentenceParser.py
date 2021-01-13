@@ -10,11 +10,17 @@ class SentenceParser():
     def __init__(self, sent:str):
         """Constructor"""
         #Исходная фраза для перевода
-        self.sent = sent
+        #Массив разных версий фразы от исходной до результирующией (фраза с самым большим индексом - последняя, результирующая)
+        self.sent = {}
+        #Исходная фраза
+        self.sent['00-input'] = sent
+        self.sent['10-soup'] = ''
         #Переведённая фраза
-        self.output = ''
+        self.sent['99-ready'] = ''
         #Словарь тегов
         self.tags_start_end = {}
+        #Словарь тегов для замены перед переводом
+        self.tags_safety_replacement = {}
 
     def get_translated(self, glosary):
         "Return translated sencence"
@@ -48,14 +54,14 @@ class SentenceParser():
 
         #Возвращаем полученный перевод
         #return 'Perevod na angliysky yazik'
-        return self.output
+        return self.sent['99-ready']
 
     def parse(self):
         "Parse sentence into subsentences"
-        self.soup = BeautifulSoup(self.sent, "html.parser")
-        self.output = self.soup.prettify(formatter="minimal")
-        self.output = str(self.soup)
-        self.output = self.sent #Don't change HTML-entities to UTF8-chars
+        self.soup = BeautifulSoup(self.sent['input'], "html.parser")
+        self.sent['10-soup'] = self.soup.prettify(formatter="minimal")
+        self.sent['10-soup'] = str(self.soup)
+        self.sent['10-soup'] = self.sent #Don't change HTML-entities to UTF8-chars
 
         self.show_tags()
 
@@ -78,10 +84,18 @@ class SentenceParser():
         #Все HTML-теги: от < до > и пробельные символы до и после тега
         regex = r'\s*<.*?>\s*';
         self.find_start_end_of_the_tag(regex)
-        self.show_tags()
 
         #слить соседние теги воедино: если окончание тега рядом с началом следующего - то записать единое начало-конец
         self.join_tags_starts_ends()
+
+        self.show_tags()
+
+        return True
+
+    def convert_tags_to_safety_chars(self):
+        "Method change all tags in self.output to safety-for-translation chars, save table of this translation"
+        #Проходимся по тегам, от конца в начало, преобразуем генерируем безопасные-для перевода замены
+        #Результат работы метода - массив соответствия исходных тегов и безопасных для онлайн-перевода и изменённая строка данных
         return True
 
     def find_start_end_of_the_tag(self, regex:str):
@@ -104,7 +118,7 @@ class SentenceParser():
         for key in tuple(self.tags_start_end):
             #Добавим информацию о теге, посчитаем длину, текст тега, etc
             self.tags_start_end[key]['len'] = self.tags_start_end[key]['end'] - self.tags_start_end[key]['start']
-            self.tags_start_end[key]['text'] = self.output[self.tags_start_end[key]['start']:self.tags_start_end[key]['end']]
+            self.tags_start_end[key]['text'] = self.sent['10-soup'][self.tags_start_end[key]['start']:self.tags_start_end[key]['end']]
 
         #отсортировать все теги по позиции начала
         self.tags_start_end = {k: v for k,v in sorted(self.tags_start_end.items(), reverse=False, key=lambda item: item[1].get('start', 0)) }
@@ -136,7 +150,7 @@ class SentenceParser():
         #Преобразуем дерево обратно в словарь тегов (в формат, понятный этому объекту)
         new_tags = {}
         for interval_obj in sorted(tree):
-            print (interval_obj.begin, ' -- ', interval_obj.end)
+            print (interval_obj.begin, '--', interval_obj.end)
             key = len(new_tags)+1
             new_tags[key] = {'start':int(round(interval_obj.begin)), 'end':int(round(interval_obj.end))}
         self.tags_start_end = new_tags
@@ -144,7 +158,7 @@ class SentenceParser():
         #отсортировать все теги по позиции начала
         self.sort_tags_starts_ends()
 
-        self.show_tags()
+        #self.show_tags()
         #Объединяем теги, которые стоят рядом или накладываются друг на друга
         #Вложенные циклы проверки наложения или соседства тегов
 
@@ -160,16 +174,11 @@ class SentenceParser():
         #print (show_str)
         #return show_str
 
-
     def glossary_translate(self, glosary:dict):
         "find and replace by glossary"
         return True
 
     def convert_sex_tags_to_first_comer(self):
-        "Method"
-        return True
-
-    def convert_tags_to_safety_chars(self):
         "Method"
         return True
 
