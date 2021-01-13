@@ -23,6 +23,8 @@ class SentenceParser():
         #Словарь тегов для замены перед переводом
         self.tags_safety_replacement = {}
 
+        #Распарсенная по текст/или тег строка - массив, где ключ=индекс, а по значению - словарь с текстом и его типом (текст/тег)
+
     def get_translated(self, glosary):
         "Return translated sencence"
         self.glosary = glosary
@@ -128,6 +130,9 @@ class SentenceParser():
         print(self.tags_safety_replacement)
 
         #TODO Преобразовывать исходную строку в массив, для каждого индекса массива определять - является ли он тегом (подлежащим переводу в переводобезопасный код) или текстом
+        #Может быть просто инвертировать интервальное дерево тегов, чтобы получить интервальное дерево текста, а потом создать массив интервалов, где у каждого интервала указан его тип?
+        #Создать новый интервал от начала до конца дерева, а потом найти difference с исходным деревом
+        #Затем пройтись по массиву интервалов, создать массив единый текстов и тегов
 
         for key in tuple(sorted(self.tags_safety_replacement, reverse=False)):
             self.sent[1] = self.sent[1].replace(self.tags_safety_replacement[key], key)
