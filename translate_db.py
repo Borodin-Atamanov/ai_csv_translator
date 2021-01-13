@@ -4,7 +4,7 @@ import random
 #Create new object to communicate with database
 db1 = SingletonDB()
 #Open connection to sqlite3 database file
-db1.open(db['sqlite3file'])
+db1.open(config['db']['sqlite3file'])
 
 #TODO получаем глоссарий из базы в виде словаря
 glosary = dict()

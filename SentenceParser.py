@@ -1,6 +1,7 @@
 from intervaltree import Interval, IntervalTree
 from bs4 import BeautifulSoup
 import re
+import config
 #from pprint import pprint
 #import json
 #import copy
@@ -13,11 +14,10 @@ class SentenceParser():
         #Массив разных версий фразы от исходной до результирующией (фраза с самым большим индексом - последняя, результирующая)
         self.sent = list()
         #Исходная фраза
-        #self.sent[0] = sent
-        self.sent.insert(0, sent)
-        #Переведённая фраза
-        self.sent.insert(1, '')
-        #self.sent[1] = ''
+        self.sent.insert(0, sent)   #self.sent[0] = sent
+        #Переведённая результирующая фраза
+        self.sent.insert(1, '') #self.sent[1] = ''
+
         #Словарь тегов
         self.tags_start_end = {}
         #Словарь тегов для замены перед переводом
@@ -95,8 +95,16 @@ class SentenceParser():
 
     def convert_tags_to_safety_chars(self):
         "Method change all tags in self.output to safety-for-translation chars, save table of this translation"
-        #Проходимся по тегам, от конца в начало, преобразуем генерируем безопасные-для перевода замены
-        #Результат работы метода - массив соответствия исходных тегов и безопасных для онлайн-перевода и изменённая строка данных
+        #Результат работы метода - массив соответствия исходных тегов и безопасных для онлайн-перевода self.tags_safety_replacement и изменённая строка данных (где исходные теги заменены на безопасные для перевода временные последовательности)
+        #Проходимся по тегам, от конца в начало, генерируем безопасные-для перевода замены
+        print ("\n\n")
+
+        #Символ, безопасный для перевода
+        s=config.config['translation']['safety_for_translation_sign']
+        c=config.config['translation']['minimum_safety_for_translation_chars'] #Минимальное Количество символов, безопасных для перевода и замены в тегах
+        for key in tuple(sorted(self.tags_start_end, reverse=True)):
+            print(key, self.tags_start_end[key])
+
         return True
 
     def find_start_end_of_the_tag(self, regex:str):

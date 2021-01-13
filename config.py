@@ -16,12 +16,23 @@ from TranslatorOnline import TranslatorOnline
 #Класс локального кеширования полученных переводов, чтобы лишний раз не платить
 from TranslationCacher import TranslationCacher
 
-files = {
-    "input_csv_file": 'input/tm.csv',
-    "backups_dir": 'backups/',
-    "db_backup_filename_end": '.sqlite3db',
-    
-}
-db = {
-    "sqlite3file": 'main.sqlite3db',
+config = {
+    'files':
+    {
+        "input_csv_file": 'input/tm.csv',
+        "backups_dir": 'backups/',
+        "db_backup_filename_end": '.sqlite3db',
+    },
+    'db':
+    {
+        "sqlite3file": 'main.sqlite3db',
+    },
+    'translation':
+    {
+        #Символ, использующийся для перевода, который не влияет на качество перевода,
+        #Такие символы временно заменяют собой теги перед отправкой на онлайн перевод
+        'safety_for_translation_sign':  '#',
+        #Минимальное количество символов, временно кодирующее один тег
+        'minimum_safety_for_translation_chars':  3,
+    }
 }
