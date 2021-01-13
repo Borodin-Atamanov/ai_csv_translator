@@ -2,6 +2,11 @@ from intervaltree import Interval, IntervalTree
 from bs4 import BeautifulSoup
 import re
 import config
+#Класс обращения к службам онлайн-перевода через платный API
+from TranslatorOnline import TranslatorOnline
+#Класс локального кеширования полученных переводов, чтобы лишний раз не платить
+from TranslationCacher import TranslationCacher
+
 #from pprint import pprint
 #import json
 #import copy
@@ -15,8 +20,13 @@ class SentenceParser():
         self.sent = list()
         #Исходная фраза
         self.sent.insert(0, sent)   #self.sent[0] = sent
+
         #Переведённая результирующая фраза
         self.sent.insert(1, '') #self.sent[1] = ''
+
+        #Массив истории перевода
+        self.sent_history = {}
+        self.sent_history['original'] = self.sent[0]
 
         #Словарь тегов
         self.tags_start_end = {}
@@ -57,6 +67,7 @@ class SentenceParser():
 
         #Возвращаем полученный перевод
         #return 'Perevod na angliysky yazik'
+        #return self.sent_history['convert_tags_to_safety_chars']
         return self.sent[1]
 
     def parse(self):
@@ -76,8 +87,12 @@ class SentenceParser():
         regex = r'\s*&[#0-9a-zA-Z]{,7};\s*';
         self.find_start_end_of_the_tag(regex)
 
+        #\n\r\t \[любая латинская буква]
+        regex = r'\s*\\[a-zA-Z]{1}\s*';
+        self.find_start_end_of_the_tag(regex)
+
         #Все %%-теги от % до % и пробельные символы до и после тега
-        #Между %% не может быть киррилица!
+        #Между %% не может быть кириллица!
         #TODO проверить работу этой регулярки! (Сейчас поведение не предсказуемо!)
         #Исправить регулярку так, чтобы она не включала русские буквы между символами %%
         #Длина строки между %% ограничена
@@ -110,7 +125,7 @@ class SentenceParser():
         i=0
         for key in tuple(sorted(self.tags_start_end, reverse=True)):
             i+=1
-            code = ' '+si*(i+cs)+' ' #repeat si string i+cs times
+            code = ''+si*(i+cs)+'' #repeat si string i+cs times
             print(code, self.tags_start_end[key])
             self.tags_safety_replacement[code] = self.tags_start_end[key]['text']
 
@@ -125,6 +140,8 @@ class SentenceParser():
 
         print ("Input\n", self.sent[0], "\nResult\n", self.sent[1], "\n")
 
+        self.sent_history['convert_tags_to_safety_chars'] = self.sent[1] #save to history
+
         self.show_tags()
         return True
 
@@ -134,7 +151,7 @@ class SentenceParser():
 
         #Превратим переводобезопасные коды в исходные теги, начиная с самых длинных кодов
         sorted_by_key_len_tuple = tuple( sorted(self.tags_safety_replacement, key=len, reverse=True))
-        print('Отсортировано по убыванию длины тегов: ', sorted_by_key_len_tuple)
+        #print('Отсортировано по убыванию длины тегов: ', sorted_by_key_len_tuple)
         for key in sorted_by_key_len_tuple:
             self.sent[1] = self.sent[1].replace(key, self.tags_safety_replacement[key], 1)
 
@@ -240,7 +257,10 @@ class SentenceParser():
         return True
 
     def get_translation_from_internet(self):
-        "Method"
+        "Method translate text, using object of TranslatorOnlineclass"
+        self.TranslatorOnline = TranslatorOnline(self.sent[1])
+        self.sent[1] = self.TranslatorOnline.get_translated()
+        print (f'Результат перевода: {self.sent[1]}');
         return True
 
     def save_translation_to_cache(self):

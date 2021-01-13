@@ -29,6 +29,7 @@ while True:
     #TODO перевод записывается обратно в базу, делается отметка о времени перевода через объект DB
     db1.save_translated_sentence(row)
     time.sleep(0.4)
+    break
 
     rnd = random.gauss(10, 1)
     #print(rnd)
