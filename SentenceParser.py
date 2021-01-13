@@ -135,12 +135,14 @@ class SentenceParser():
 
         #Отсортируем массив по длинам строк тегов, начиная с самых длинных, чтобы сначала заменять более длинные теги, ведь длина имеет значение при строковых операциях!
         self.tags_safety_replacement = {k: v for k,v in sorted(self.tags_safety_replacement.items(), reverse=True, key=lambda item: len(str(item[1]))) }
-        print('Отсортировано по длине тегов: ',self.tags_safety_replacement)
+        print('Отсортировано по длине тегов: ', self.tags_safety_replacement)
         #Превратим теги в переводобезопасные символы, начиная с самых длинных тегов
-        for key in tuple(sorted(self.tags_safety_replacement, reverse=False)):
+        for key in tuple(self.tags_safety_replacement):
             self.sent[1] = self.sent[1].replace(self.tags_safety_replacement[key], key, 1)
 
         print ("Input\n", self.sent[0], "\nResult\n", self.sent[1], "\n")
+
+        self.show_tags()
         return True
 
     def find_start_end_of_the_tag(self, regex:str):
@@ -213,9 +215,16 @@ class SentenceParser():
     def show_tags(self):
         "Method show found tags"
         show_str = ''
+        print("\nself.tags_start_end")
         for key in self.tags_start_end:
             #show_str = show_str.join("\n").join(str(key)).join(": ").join(str(self.tags_start_end[key]))
             print(key, self.tags_start_end[key])
+
+        print("\ntags_safety_replacement")
+        for key in self.tags_safety_replacement:
+            #show_str = show_str.join("\n").join(str(key)).join(": ").join(str(self.tags_start_end[key]))
+            print("[", key,  "] [",self.tags_safety_replacement[key], "]", sep="")
+
         #print (show_str)
         #return show_str
 
