@@ -59,10 +59,13 @@ class SentenceParser():
 
         self.show_tags()
 
-        #Все HTML-теги: от < до > и пробельные символы до и после тега
-        regex = r'\s*<.*?>\s*';
+        #HTML-сущности цифровые
+        regex = r'\s*&#\d{,7};\s*';
         self.find_start_end_of_the_tag(regex)
-        self.show_tags()
+
+        #HTML-сущности буквенные
+        regex = r'\s*&[#0-9a-zA-Z]{,7};\s*';
+        self.find_start_end_of_the_tag(regex)
 
         #Все %%-теги от % до % и пробельные символы до и после тега
         #Между %% не может быть киррилица!
@@ -72,13 +75,10 @@ class SentenceParser():
         regex = r'\s*%[^А-я]{,17}%\s*';
         self.find_start_end_of_the_tag(regex)
 
-        #HTML-сущности цифровые
-        regex = r'\s*&#\d{,7};\s*';
+        #Все HTML-теги: от < до > и пробельные символы до и после тега
+        regex = r'\s*<.*?>\s*';
         self.find_start_end_of_the_tag(regex)
-
-        #HTML-сущности буквенные
-        regex = r'\s*&[#0-9a-zA-Z]{,7};\s*';
-        self.find_start_end_of_the_tag(regex)
+        self.show_tags()
 
         #слить соседние теги воедино: если окончание тега рядом с началом следующего - то записать единое начало-конец
         self.join_tags_starts_ends()
@@ -104,7 +104,6 @@ class SentenceParser():
         for key in tuple(self.tags_start_end):
             #Добавим информацию о теге, посчитаем длину, текст тега, etc
             self.tags_start_end[key]['len'] = self.tags_start_end[key]['end'] - self.tags_start_end[key]['start']
-            self.tags_start_end[key].setdefault('join', 'j' + str(self.tags_start_end[key]['start']) + '--' + str(self.tags_start_end[key]['end']));
             self.tags_start_end[key]['text'] = self.output[self.tags_start_end[key]['start']:self.tags_start_end[key]['end']]
 
         #отсортировать все теги по позиции начала
@@ -113,74 +112,42 @@ class SentenceParser():
 
     def join_tags_starts_ends(self):
         "Method joins start and end position of tags together if they stays together (end of one tag is start of another)"
-        #отсортировать все теги по позиции начала
-        new_tags_start_end = {} #Новый словарь для объединённых тегов
 
         print("join_tags_starts_ends()")
+
+        #отсортировать все теги по позиции начала
+        self.sort_tags_starts_ends()
+
+        #Новое интервальное дерево создаём
+        tree = IntervalTree()
+        #Проходимся по тегам, преобразуем в интервальное дерево
+        #Используем хитрость: от позиции старта отнимаем сотую к позиции конца прибавляем сотую, чтобы интервалы накладывались с перехлёстом, и легко определялись методом merge_overlaps() Такой вот трюк
+        for key in tuple(self.tags_start_end):
+            tree.addi(self.tags_start_end[key]['start']-0.01, self.tags_start_end[key]['end']+0.01)
+
+        for interval_obj in sorted(tree):
+            print (interval_obj.begin, ' -- ', interval_obj.end)
+        #Объединяем пересекающиеся интервалы
+        print ('join!!')
+        tree.merge_overlaps()
+        for interval_obj in sorted(tree):
+            print (interval_obj.begin, ' -- ', interval_obj.end)
+
+        #Преобразуем дерево обратно в словарь тегов (в формат, понятный этому объекту)
+        new_tags = {}
+        for interval_obj in sorted(tree):
+            print (interval_obj.begin, ' -- ', interval_obj.end)
+            key = len(new_tags)+1
+            new_tags[key] = {'start':int(round(interval_obj.begin)), 'end':int(round(interval_obj.end))}
+        self.tags_start_end = new_tags
+
+        #отсортировать все теги по позиции начала
         self.sort_tags_starts_ends()
 
         self.show_tags()
         #Объединяем теги, которые стоят рядом или накладываются друг на друга
         #Вложенные циклы проверки наложения или соседства тегов
-        delete_this_keys = set()
-        new_tags = {}
-        #new_tags = (self.tags_start_end) #Словарь для объединённых и прежних
-        i=0
-        for keya in tuple(self.tags_start_end):
-            for keyb in tuple(self.tags_start_end):
-                #Проверяем, являются ли последние два тега пересекающимися, соседними
-                #Теги объединяются, если начало или конец одного тега лежит внутри другого тега
-                i+=1
-                mina = min(
-                self.tags_start_end[keya]['start'],
-                self.tags_start_end[keya]['end'])
-                maxa = max(
-                self.tags_start_end[keya]['start'],
-                self.tags_start_end[keya]['end'])
-                minb = min(
-                self.tags_start_end[keyb]['start'],
-                self.tags_start_end[keyb]['end'])
-                maxb = max(
-                self.tags_start_end[keyb]['start'],
-                self.tags_start_end[keyb]['end'])
 
-                if (mina <= minb <= maxa) or (mina <= maxb <= maxa):
-                    #теги соседние и(ли) пересекаются, объединим их в один тег
-                    new_joined_tag = {}
-                    new_joined_tag['start'] = min(mina, minb)
-                    new_joined_tag['end'] = max(maxa, maxb)
-                    new_key = str(new_joined_tag['start']) + '--' + str(new_joined_tag['end'])
-                    new_key = len(new_tags)+1
-                    new_tags[new_key] = new_joined_tag
-                    #print ("Соединяем тег в ", new_joined_tag);
-
-                    #Удалим исходные теги, (останется только новый объединённый тег)
-                    delete_this_keys.add(keya)
-                    delete_this_keys.add(keyb)
-                    pass
-                else:
-                    #Теги не соседние
-                    new_key = len(new_tags)+1
-                    new_tags[new_key] = self.tags_start_end[keyb]
-                    pass
-
-
-        print ("Iterations", i)
-        self.tags_start_end = new_tags
-        self.sort_tags_starts_ends()
-        self.show_tags()
-
-        print("Удаляем объединённые теги: ")
-        delete_this_keys = (set(delete_this_keys))
-        print (delete_this_keys)
-        for key in delete_this_keys:
-            #print ('Удаляем ', key, type(key))
-            if key in self.tags_start_end:
-                del self.tags_start_end[key]
-
-        print("После удаления:")
-        self.sort_tags_starts_ends()
-        self.show_tags()
 
         return True
 
