@@ -96,11 +96,10 @@ class SentenceParser():
         return True
 
     def convert_tags_to_safety_chars(self):
-        "Method change all tags in self.output to safety-for-translation chars, save table of this translation"
+        "Method change all tags in self.sent[1] to safety-for-translation chars, save table of this translation in self.tags_safety_replacement"
         #Результат работы метода - массив соответствия исходных тегов и безопасных для онлайн-перевода self.tags_safety_replacement и изменённая строка данных (где исходные теги заменены на безопасные для перевода временные последовательности)
         print ("\n\n")
         self.tags_safety_replacement = {}
-
 
         #Символ, безопасный для перевода
         si=config.config['translation']['safety_for_translation_sign']
@@ -111,27 +110,11 @@ class SentenceParser():
         i=0
         for key in tuple(sorted(self.tags_start_end, reverse=True)):
             i+=1
-            code = si*(i+cs) #repeat si string i+cs times
+            code = ' '+si*(i+cs)+' ' #repeat si string i+cs times
             print(code, self.tags_start_end[key])
             self.tags_safety_replacement[code] = self.tags_start_end[key]['text']
 
         print (self.tags_safety_replacement)
-        #new_tags_safety_replacement = {}
-        #for key in tuple(sorted(self.tags_safety_replacement, reverse=False)):
-            #new_tags_safety_replacement[key] = self.tags_safety_replacement[key]
-        ##self.tags_safety_replacement = {reversed(self.tags_safety_replacement)}
-        #self.tags_safety_replacement = new_tags_safety_replacement
-
-        #Проводим замену тегов на временные переводо-безопасные коды
-        #Как лучше менять?
-        #Может быть разобраться строку на массив подстрок, и менять по индексу? Или всё же по содержимому? Да, менять по содержимому - страшно, ведь одни теги могут включать в себя другие, однако, можно попробовать, вдруг будет нормально и данные не пострадают?
-        #Не, всё же нужно заменять поэлементно, а не заменять "все найденные вхождения"
-        #Чувствую, что есть какой-то более простой способ, но я не могу до него додуматься...
-
-        #TODO Преобразовывать исходную строку в массив, для каждого индекса массива определять - является ли он тегом (подлежащим переводу в переводобезопасный код) или текстом
-        #Может быть просто инвертировать интервальное дерево тегов, чтобы получить интервальное дерево текста, а потом создать массив интервалов, где у каждого интервала указан его тип?
-        #Создать новый интервал от начала до конца дерева, а потом найти difference с исходным деревом
-        #Затем пройтись по массиву интервалов, создать массив единый текстов и тегов
 
         #Отсортируем массив по длинам строк тегов, начиная с самых длинных, чтобы сначала заменять более длинные теги, ведь длина имеет значение при строковых операциях!
         self.tags_safety_replacement = {k: v for k,v in sorted(self.tags_safety_replacement.items(), reverse=True, key=lambda item: len(str(item[1]))) }
@@ -144,6 +127,21 @@ class SentenceParser():
 
         self.show_tags()
         return True
+
+    def convert_safety_chars_to_tags_back(self):
+        "Method replace all safety-to-translate tags to original tags, using self.tags_safety_replacement"
+        #Отсортируем массив по длинам строк тегов, начиная с самых длинных, чтобы сначала заменять более длинные теги, ведь длина имеет значение при строковых операциях!
+
+        #Превратим переводобезопасные коды в исходные теги, начиная с самых длинных кодов
+        sorted_by_key_len_tuple = tuple( sorted(self.tags_safety_replacement, key=len, reverse=True))
+        print('Отсортировано по убыванию длины тегов: ', sorted_by_key_len_tuple)
+        for key in sorted_by_key_len_tuple:
+            self.sent[1] = self.sent[1].replace(key, self.tags_safety_replacement[key], 1)
+
+        print ("\nResult\n", self.sent[1], "\n")
+
+        return True
+
 
     def find_start_end_of_the_tag(self, regex:str):
         "Method return dict with start and end positions of found tags"
@@ -226,6 +224,7 @@ class SentenceParser():
             print("[", key,  "] [",self.tags_safety_replacement[key], "]", sep="")
 
         #print (show_str)
+        #print (self.__dict__)
         #return show_str
 
     def glossary_translate(self, glosary:dict):
@@ -241,10 +240,6 @@ class SentenceParser():
         return True
 
     def get_translation_from_internet(self):
-        "Method"
-        return True
-
-    def convert_safety_chars_to_tags_back(self):
         "Method"
         return True
 
