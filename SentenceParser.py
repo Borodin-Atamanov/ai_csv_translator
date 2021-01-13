@@ -11,12 +11,13 @@ class SentenceParser():
         """Constructor"""
         #Исходная фраза для перевода
         #Массив разных версий фразы от исходной до результирующией (фраза с самым большим индексом - последняя, результирующая)
-        self.sent = {}
+        self.sent = list()
         #Исходная фраза
-        self.sent['00-input'] = sent
-        self.sent['10-soup'] = ''
+        #self.sent[0] = sent
+        self.sent.insert(0, sent)
         #Переведённая фраза
-        self.sent['99-ready'] = ''
+        self.sent.insert(1, '')
+        #self.sent[1] = ''
         #Словарь тегов
         self.tags_start_end = {}
         #Словарь тегов для замены перед переводом
@@ -54,14 +55,14 @@ class SentenceParser():
 
         #Возвращаем полученный перевод
         #return 'Perevod na angliysky yazik'
-        return self.sent['99-ready']
+        return self.sent[1]
 
     def parse(self):
         "Parse sentence into subsentences"
-        self.soup = BeautifulSoup(self.sent['input'], "html.parser")
-        self.sent['10-soup'] = self.soup.prettify(formatter="minimal")
-        self.sent['10-soup'] = str(self.soup)
-        self.sent['10-soup'] = self.sent #Don't change HTML-entities to UTF8-chars
+        self.soup = BeautifulSoup(self.sent[0], "html.parser")
+        self.sent[1] = self.soup.prettify(formatter="minimal")
+        self.sent[1] = str(self.soup)
+        self.sent[1] = self.sent[0] #Don't change HTML-entities to UTF8-chars
 
         self.show_tags()
 
@@ -101,7 +102,7 @@ class SentenceParser():
     def find_start_end_of_the_tag(self, regex:str):
         "Method return dict with start and end positions of found tags"
         regul = re.compile(regex, re.DOTALL)
-        for reg_obj in regul.finditer(self.output):
+        for reg_obj in regul.finditer(self.sent[1]):
             #dict to save start and end positions of tag
             key = len(self.tags_start_end)
             self.tags_start_end[key] = {}
@@ -118,7 +119,7 @@ class SentenceParser():
         for key in tuple(self.tags_start_end):
             #Добавим информацию о теге, посчитаем длину, текст тега, etc
             self.tags_start_end[key]['len'] = self.tags_start_end[key]['end'] - self.tags_start_end[key]['start']
-            self.tags_start_end[key]['text'] = self.sent['10-soup'][self.tags_start_end[key]['start']:self.tags_start_end[key]['end']]
+            self.tags_start_end[key]['text'] = self.sent[1][self.tags_start_end[key]['start']:self.tags_start_end[key]['end']]
 
         #отсортировать все теги по позиции начала
         self.tags_start_end = {k: v for k,v in sorted(self.tags_start_end.items(), reverse=False, key=lambda item: item[1].get('start', 0)) }
