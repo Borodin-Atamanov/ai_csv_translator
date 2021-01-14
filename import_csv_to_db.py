@@ -1,9 +1,18 @@
-from config import *
+import os
+import csv
+import shutil
+import datetime
+from config import config
+
+#Класс работы с базой
+from SingletonDB import SingletonDB
 
 #Create backups dir (if not exists)
-if not os.path.exists(config['files']['backups_dir']): os.makedirs(config['files']['backups_dir'])
+if not os.path.exists(config['files']['backups_dir']):
+    os.makedirs(config['files']['backups_dir'])
 #Backup BD
-if (os.path.isfile(config['db']['sqlite3file'])): shutil.move (config['db']['sqlite3file'], config['files']['backups_dir']+datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")+config['files']['db_backup_filename_end'])
+if (os.path.isfile(config['db']['sqlite3file'])):
+    shutil.move (config['db']['sqlite3file'], config['files']['backups_dir']+datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")+config['files']['db_backup_filename_end'])
 
 #Create new object to communicate with database
 db1 = SingletonDB()
@@ -20,8 +29,7 @@ with open(config['files']['input_csv_file'], mode='r') as csv_file:
     for row in csv_reader:
         db1.insert_new_untranslated_sentence(row[0], row[1])
         line_count += 1
-        if line_count > 1000:
-            break;
+        if line_count > 1000:            break;
     print(f'Processed {line_count} lines.')
     db1.commit()
 

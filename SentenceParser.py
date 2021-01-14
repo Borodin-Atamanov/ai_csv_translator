@@ -103,6 +103,10 @@ class SentenceParser():
         regex = r'\s*<.*?>\s*';
         self.find_start_end_of_the_tag(regex)
 
+        #%1$s
+        regex = r'\s*\%\d{1}\$[a-zA-Z]{1}\s*';
+        self.find_start_end_of_the_tag(regex)
+
         #слить соседние теги воедино: если окончание тега рядом с началом следующего - то записать единое начало-конец
         self.join_tags_starts_ends()
 

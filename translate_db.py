@@ -1,5 +1,9 @@
-from config import *
-import random
+from config import config
+
+#Класс работы с базой
+from SingletonDB import SingletonDB
+#Класс парсинга фраз перед и после перевода
+from SentenceParser import SentenceParser
 
 #Create new object to communicate with database
 db1 = SingletonDB()
@@ -28,12 +32,6 @@ while True:
     row['to'] = translated_sentence
     #TODO перевод записывается обратно в базу, делается отметка о времени перевода через объект DB
     db1.save_translated_sentence(row)
-    time.sleep(0.4)
     break
-
-    rnd = random.gauss(10, 1)
-    #print(rnd)
-    if rnd >= 11:
-        break
 
 #sent = SentenceParser()
