@@ -264,7 +264,7 @@ class SentenceParser():
 
     def get_translation_from_internet(self):
         "Method translate text, using object of TranslatorOnlineclass"
-        self.sent_history['before_translate'] = self.sent[1]
+        #self.sent_history['before_translate'] = self.sent[1]
         self.TranslatorOnline = TranslatorOnline(self.sent[1])
         self.sent[1] = self.TranslatorOnline.get_translated()
         self.sent_history['after_translate'] = self.sent[1]
