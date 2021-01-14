@@ -43,12 +43,12 @@ class TranslatorOnline():
 
         #TODO проверять ошибки! Не писать в базу, если есть ошибки перевода! Бросать исключение!
 
-        print ('transation_api_result = ')
-        print (type(transation_api_result))
+        #print ('transation_api_result = ')
+        #print (type(transation_api_result))
         #print (transation_api_result.__dict__)
         #print ('transation_api_result.text:::')
         #print (transation_api_result.text)
-        print ('transation_api_result.content:::')
+        #print ('transation_api_result.content:::')
         #print (transation_api_result.content)
 
         #Преобразуем полученный ответ из JSON в питонические данные

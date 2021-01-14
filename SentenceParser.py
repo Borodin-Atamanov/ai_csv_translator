@@ -77,8 +77,9 @@ class SentenceParser():
         self.sent[1] = str(self.soup)
         self.sent[1] = self.sent[0] #Don't change HTML-entities to UTF8-chars
 
-        self.show_tags()
+        #self.show_tags()
 
+        #Далее определяем разные теги
         #HTML-сущности цифровые
         regex = r'\s*&#\d{,7};\s*';
         self.find_start_end_of_the_tag(regex)
@@ -103,14 +104,18 @@ class SentenceParser():
         regex = r'\s*<.*?>\s*';
         self.find_start_end_of_the_tag(regex)
 
-        #%1$s
+        #%1$s %3$d
         regex = r'\s*\%\d{1}\$[a-zA-Z]{1}\s*';
+        self.find_start_end_of_the_tag(regex)
+
+        # "переводобезопасный символ #" (он есть в конфигурации)
+        regex = r'\s*\\'+config.config['translation']['safety_for_translation_sign']+'*\s*';
         self.find_start_end_of_the_tag(regex)
 
         #слить соседние теги воедино: если окончание тега рядом с началом следующего - то записать единое начало-конец
         self.join_tags_starts_ends()
 
-        self.show_tags()
+        #self.show_tags()
 
         return True
 
@@ -137,16 +142,16 @@ class SentenceParser():
 
         #Отсортируем массив по длинам строк тегов, начиная с самых длинных, чтобы сначала заменять более длинные теги, ведь длина имеет значение при строковых операциях!
         self.tags_safety_replacement = {k: v for k,v in sorted(self.tags_safety_replacement.items(), reverse=True, key=lambda item: len(str(item[1]))) }
-        print('Отсортировано по длине тегов: ', self.tags_safety_replacement)
+        #print('Отсортировано по длине тегов: ', self.tags_safety_replacement)
         #Превратим теги в переводобезопасные символы, начиная с самых длинных тегов
         for key in tuple(self.tags_safety_replacement):
             self.sent[1] = self.sent[1].replace(self.tags_safety_replacement[key], key, 1)
 
-        print ("Input\n", self.sent[0], "\nResult\n", self.sent[1], "\n")
+        #print ("Input\n", self.sent[0], "\nResult\n", self.sent[1], "\n")
 
         self.sent_history['convert_tags_to_safety_chars'] = self.sent[1] #save to history
 
-        self.show_tags()
+        #self.show_tags()
         return True
 
     def convert_safety_chars_to_tags_back(self):
@@ -159,10 +164,8 @@ class SentenceParser():
         for key in sorted_by_key_len_tuple:
             self.sent[1] = self.sent[1].replace(key, self.tags_safety_replacement[key], 1)
 
-        print ("\nResult\n", self.sent[1], "\n")
-
+        self.sent_history['convert_safety_chars_to_tags_back'] = self.sent[1] #save to history
         return True
-
 
     def find_start_end_of_the_tag(self, regex:str):
         "Method return dict with start and end positions of found tags"
@@ -193,8 +196,6 @@ class SentenceParser():
     def join_tags_starts_ends(self):
         "Method joins start and end position of tags together if they stays together (end of one tag is start of another)"
 
-        print("join_tags_starts_ends()")
-
         #отсортировать все теги по позиции начала
         self.sort_tags_starts_ends()
 
@@ -206,17 +207,18 @@ class SentenceParser():
             tree.addi(self.tags_start_end[key]['start']-0.01, self.tags_start_end[key]['end']+0.01)
 
         for interval_obj in sorted(tree):
-            print (interval_obj.begin, ' -- ', interval_obj.end)
+            #print (interval_obj.begin, ' -- ', interval_obj.end)
+            pass
         #Объединяем пересекающиеся интервалы
-        print ('join!!')
         tree.merge_overlaps()
         for interval_obj in sorted(tree):
-            print (interval_obj.begin, ' -- ', interval_obj.end)
+            #print (interval_obj.begin, ' -- ', interval_obj.end)
+            pass
 
         #Преобразуем дерево обратно в словарь тегов (в формат, понятный этому объекту)
         new_tags = {}
         for interval_obj in sorted(tree):
-            print (interval_obj.begin, '--', interval_obj.end)
+            #print (interval_obj.begin, '--', interval_obj.end)
             key = len(new_tags)+1
             new_tags[key] = {'start':int(round(interval_obj.begin)), 'end':int(round(interval_obj.end))}
         self.tags_start_end = new_tags
@@ -234,15 +236,15 @@ class SentenceParser():
     def show_tags(self):
         "Method show found tags"
         show_str = ''
-        print("\nself.tags_start_end")
+        print("\nself.tags_start_end:")
         for key in self.tags_start_end:
             #show_str = show_str.join("\n").join(str(key)).join(": ").join(str(self.tags_start_end[key]))
             print(key, self.tags_start_end[key])
 
         print("\ntags_safety_replacement")
         for key in self.tags_safety_replacement:
-            #show_str = show_str.join("\n").join(str(key)).join(": ").join(str(self.tags_start_end[key]))
             print("[", key,  "] [",self.tags_safety_replacement[key], "]", sep="")
+            pass
 
         #print (show_str)
         #print (self.__dict__)
@@ -262,9 +264,21 @@ class SentenceParser():
 
     def get_translation_from_internet(self):
         "Method translate text, using object of TranslatorOnlineclass"
+        self.sent_history['before_translate'] = self.sent[1]
         self.TranslatorOnline = TranslatorOnline(self.sent[1])
         self.sent[1] = self.TranslatorOnline.get_translated()
-        print (f'Результат перевода: {self.sent[1]}');
+        self.sent_history['after_translate'] = self.sent[1]
+
+        #Убираем мусорные пробельные символы находящиеся между "переводобезопасными символами"
+        s='\\'+config.config['translation']['safety_for_translation_sign']
+        #Формируем строку поиска по шаблону "#(пробелы)#"
+        finder_str = ''+s+r'[\s\r\n]{1,}'+s+''
+        for i in range(0, 17):
+            #r'\#[\s\r\n]{1,}\#' --> '##'
+            self.sent[1] = re.sub(finder_str, config.config['translation']['safety_for_translation_sign']*2, self.sent[1])
+
+        #print (f'Результат перевода: {self.sent[1]}');
+        self.sent_history['cleaning_after_translate'] = self.sent[1]
         return True
 
     def save_translation_to_cache(self):

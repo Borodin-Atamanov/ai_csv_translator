@@ -30,6 +30,12 @@ while True:
     #Производим перевод, передаём глоссарий в аргументах
     translated_sentence = sent.get_translated(glosary)
     row['to'] = translated_sentence
+    #print(sent.__dict__)
+    for key in sent.sent_history:
+        print (f'   {key}:')
+        print (sent.sent_history[key])
+
+    print ()
     #TODO перевод записывается обратно в базу, делается отметка о времени перевода через объект DB
     db1.save_translated_sentence(row)
     break
