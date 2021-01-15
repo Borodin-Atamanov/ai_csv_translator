@@ -15,8 +15,25 @@ class TranslatorOnline():
         #Массив истории перевода
         self.sent_history = {}
         pass
+
+    def save_translation_to_cache(self):
+        "Method saved translation to db"
+        #self.sent_history['before_translate'] = self.sent[1]
+        #self.sent_history['cleaning_after_translate'] = self.sent[1]
+
+    def get_translation_from_cache(self):
+        "Method"
+
+
     def get_translated(self):
         "Return translated sentence"
+
+        #TODO Пробуем получить перевод из кеша переводов
+        #self.get_translation_from_cache()
+
+        #Если в кеше точный перевод не нашёлся:
+        #TODO создаём объект онлайн-перевода
+
 
         headers = {
             'Content-Type': 'application/json',
@@ -42,6 +59,7 @@ class TranslatorOnline():
         #transation_api_result.text - обычная строка результата
 
         #TODO проверять ошибки! Не писать в базу, если есть ошибки перевода! Бросать исключение!
+
 
         #print ('transation_api_result = ')
         #print (type(transation_api_result))

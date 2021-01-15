@@ -45,24 +45,16 @@ class SentenceParser():
         #TODO2 половые теги удалены: заменены на первый вариант, фигурные скобки заменены на переводобезопасные символы (может просто удалить всё от символа '|' до символа '}, удалить символ '{')
         self.convert_sex_tags_to_first_comer()
 
-        #TODO получаем единственную фразу, в которой все теги заменены на безопасные для перевода символы
+        #получаем единственную строку, в которой все теги заменены на безопасные для перевода символы
         self.convert_tags_to_safety_chars()
 
         #Переводим по глоссарию
         self.glossary_translate(glosary)
 
-        #TODO Пробуем получить перевод из кеша переводов
-        self.get_translation_from_cache()
-
-        #Если в кеше точный перевод не нашёлся:
-        #TODO создаём объект онлайн-перевода
+        #Отправляет строку на перевод через объект перевода, получаем готовый перевод
         self.get_translation_from_internet()
-        #TODO Отправляет строку на перевод через объект перевода, получаем готовый перевод
 
-        #TODO Записывается результат перевода в локальный кэш
-        self.save_translation_to_cache()
-
-        #TODO превратить переводобезопасные символы обратно в теги
+        #превратить переводобезопасные символы обратно в теги
         self.convert_safety_chars_to_tags_back()
 
         #Возвращаем полученный перевод
@@ -229,13 +221,10 @@ class SentenceParser():
         "Method"
         return True
 
-    def get_translation_from_cache(self):
-        "Method"
-        return True
-
     def get_translation_from_internet(self):
         "Method translate text, using object of TranslatorOnlineclass"
-        #self.sent_history['before_translate'] = self.sent[1]
+        self.sent_history['before_translate'] = self.sent[1]
+        #Создаём объект онлайн-перевода
         self.TranslatorOnline = TranslatorOnline(self.sent[1])
         self.sent[1] = self.TranslatorOnline.get_translated()
         self.sent_history['after_translate'] = self.sent[1]
@@ -252,7 +241,4 @@ class SentenceParser():
         self.sent_history['cleaning_after_translate'] = self.sent[1]
         return True
 
-    def save_translation_to_cache(self):
-        "Method"
-        return True
 
