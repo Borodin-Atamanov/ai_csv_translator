@@ -35,6 +35,7 @@ i=0
 while True:
     i+=1
     if i>10:     print('        Всёшечки! ');break
+    #TODO нужно или хранить в памяти весь список из БД или отмечать в базе, что запись не обработана (обработана с ошибкой)
     row=db1.get_row()
     print(vars(db1))
     #id, original_id, from_sent = row[0], row[1], row[2]
@@ -43,6 +44,7 @@ while True:
     if len(row['from']) > 5000:
         #Если длина исходной строки слишком велика - пропускаем её, ничего не отмечая в базе
         continue
+    print(row)
     sent = SentenceParser(row['from'])
 
     #Производим перевод, передаём глоссарий в аргументах
