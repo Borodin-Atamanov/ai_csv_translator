@@ -79,44 +79,15 @@ class SentenceParser():
 
         #self.show_tags()
 
-        #Далее определяем разные теги
-        #HTML-сущности цифровые
-        regex = r'\s*&#\d{,7};\s*';
-        self.find_start_end_of_the_tag(regex)
-
-        #HTML-сущности буквенные
-        regex = r'\s*&[#0-9a-zA-Z]{,7};\s*';
-        self.find_start_end_of_the_tag(regex)
-
-        #\n\r\t \[любая латинская буква]
-        regex = r'\s*\\[a-zA-Z]{1}\s*';
-        self.find_start_end_of_the_tag(regex)
-
-        #Все %%-теги от % до % и пробельные символы до и после тега
-        #Между %% не может быть кириллица!
-        #TODO проверить работу этой регулярки! (Сейчас поведение не предсказуемо!)
-        #Исправить регулярку так, чтобы она не включала русские буквы между символами %%
-        #Длина строки между %% ограничена
-        regex = r'\s*%[^А-я]{,17}%\s*';
-        self.find_start_end_of_the_tag(regex)
-
-        #Все HTML-теги: от < до > и пробельные символы до и после тега
-        regex = r'\s*<.*?>\s*';
-        self.find_start_end_of_the_tag(regex)
-
-        #%1$s %3$d
-        regex = r'\s*\%\d{1}\$[a-zA-Z]{1}\s*';
-        self.find_start_end_of_the_tag(regex)
-
-        # "переводобезопасный символ #" (он есть в конфигурации)
-        regex = r'\s*\\'+config.config['translation']['safety_for_translation_sign']+'*\s*';
-        self.find_start_end_of_the_tag(regex)
+        #Определяем разные теги в цикле
+        for regex in config.config['regex_tags']:
+            #print (regex)
+            self.find_start_end_of_the_tag(regex)
 
         #слить соседние теги воедино: если окончание тега рядом с началом следующего - то записать единое начало-конец
         self.join_tags_starts_ends()
 
         #self.show_tags()
-
         return True
 
     def convert_tags_to_safety_chars(self):
