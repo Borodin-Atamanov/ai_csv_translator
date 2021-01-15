@@ -33,7 +33,7 @@ glosary = dict()
 i=0
 while True:
     i+=1
-    if i>117:     print('        Всёшечки! ');break
+    if i>121:     print('        Всёшечки! ');break
     #TODO нужно или хранить в памяти весь список из БД или отмечать в базе, что запись не обработана (обработана с ошибкой)
     row = db1.get_next_untranslated_sentence()
     print(vars(db1))
