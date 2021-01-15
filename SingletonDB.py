@@ -62,14 +62,15 @@ class SingletonDB(object):
     def get_next_untranslated_sentence(self):
         "get next sentence where computed is null"
         #walk on untranslated sentences
-        result = self.execute('SELECT * FROM `sentences` WHERE `computed` IS NULL ORDER BY `id` ASC')
+        result = self.execute('SELECT * FROM `sentences` WHERE `computed` IS NULL AND `error` < 1 ORDER BY `id` ASC')
         return self.get_row()
 
     def save_translated_sentence(self, values_in_dict):
         "Save translated sentence to database. Arguments: dict('id' - row id, 'to' - translated text"
         #result = self.execute('SELECT * FROM `sentences` WHERE `computed` IS NULL ORDER BY `id` DESC')
         values_in_dict['computed'] = int(datetime.datetime.now().timestamp())
-        result = self.execute('''UPDATE `sentences` SET `to`=:to, `computed`=:computed WHERE `id`=:id LIMIT 1''', values_in_dict)
+        values_in_dict['error'] = values_in_dict.get('error', 0)
+        result = self.execute('''UPDATE `sentences` SET `to`=:to, `computed`=:computed, `error`=:error WHERE `id`=:id LIMIT 1''', values_in_dict)
         self.commit()
         return result
 
@@ -103,7 +104,8 @@ class SingletonDB(object):
         `original_id`   TEXT,
         `from`  TEXT,
         `to`    TEXT,
-        `computed`  INTEGER
+        `computed`  INTEGER,
+        `error`  INTEGER DEFAULT 0 NOT NULL
         );
         """)
         result = self.cur.execute("""

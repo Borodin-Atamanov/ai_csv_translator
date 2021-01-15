@@ -30,19 +30,20 @@ glosary = dict()
 
 #walk on untranslated sentences in DB, sent it to parser
 #Получить следующую запись для перевода от объекта DB в цикле пока не кончатся записи
-row = db1.get_next_untranslated_sentence()
 i=0
 while True:
     i+=1
-    if i>10:     print('        Всёшечки! ');break
+    if i>117:     print('        Всёшечки! ');break
     #TODO нужно или хранить в памяти весь список из БД или отмечать в базе, что запись не обработана (обработана с ошибкой)
-    row=db1.get_row()
+    row = db1.get_next_untranslated_sentence()
     print(vars(db1))
     #id, original_id, from_sent = row[0], row[1], row[2]
     #create parser object
     print(len(row['from']))
     if len(row['from']) > 5000:
-        #Если длина исходной строки слишком велика - пропускаем её, ничего не отмечая в базе
+        #Если длина исходной строки слишком велика - пропускаем её, отмечаем в базе error=10000
+        row['error'] = 10000
+        db1.save_translated_sentence(row)
         continue
     print(row)
     sent = SentenceParser(row['from'])
