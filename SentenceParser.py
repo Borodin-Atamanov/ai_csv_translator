@@ -22,7 +22,7 @@ class SentenceParser():
         self.sent.insert(0, sent)   #self.sent[0] = sent
 
         #Переведённая результирующая фраза
-        self.sent.insert(1, '') #self.sent[1] = ''
+        self.sent.insert(1, None) #self.sent[1] = ''
 
         #Массив истории перевода
         self.sent_history = {}

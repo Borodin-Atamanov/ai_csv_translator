@@ -1,6 +1,9 @@
 import config
 import requests
 import json
+#Класс работы с базой
+from SingletonDB import SingletonDB
+
 
 class TranslatorOnline():
     def __init__(self, sent:str):
@@ -16,66 +19,71 @@ class TranslatorOnline():
         self.sent_history = {}
         pass
 
-    def save_translation_to_cache(self):
-        "Method saved translation to db"
-        #self.sent_history['before_translate'] = self.sent[1]
-        #self.sent_history['cleaning_after_translate'] = self.sent[1]
-
-    def get_translation_from_cache(self):
-        "Method"
-
-
     def get_translated(self):
         "Return translated sentence"
 
         #TODO Пробуем получить перевод из кеша переводов
         #self.get_translation_from_cache()
+        #Create new object to communicate with database
+        db1 = SingletonDB()
+        #Open connection to sqlite3 database file
+        db1.open(config.config['db']['sqlite3file'])
+        cache_row = db1.get_from_cache({'from': self.sent[0]})
+        #print(vars(db1))
+        #id, original_id, from_sent = row[0], row[1], row[2]
+        if cache_row is not None and cache_row.get('to') is not None:
+            #В кеше нашёлся точный перевод,
+            print (f"       Перевод нашёлся в кеше! {cache_row['to']}")
+            print (f"{self.sent}")
+            self.sent[1] = cache_row['to']
+            #Вернём перевод из кеша
+            return self.sent[1]
+        else:
+            #Если в кеше точный перевод не нашёлся:
+            #создаём объект онлайн-перевода
+            #HTTP-Заголовок запроса
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': 'Api-Key '+config.config['secret_keys']['yandex']['Api-Key'],
+            }
 
-        #Если в кеше точный перевод не нашёлся:
-        #TODO создаём объект онлайн-перевода
+            #Массив отправляемых на перевод данных
+            translate_array_to_send = \
+            {
+                #folderId нужен для авторизации при переводе?
+                "folderId": config.config['secret_keys']['yandex']['folderId'],
+                #Массив текстов, отправляемых на перевод, можно отправлять несколько в одном запросе
+                "texts": [self.sent[0]],
+                "sourceLanguageCode": config.config['translation']['sourceLanguageCode'],
+                "targetLanguageCode": config.config['translation']['targetLanguageCode'],
+                "format": config.config['translation']['format'],
+            }
+            #Создаём строку с json-данными для отправки через API-перевода
+            translate_json_str = json.dumps(translate_array_to_send, ensure_ascii=True, indent=None, separators=(',', ':') )
 
+            #Получаем перевод от сервиса
+            transation_api_result = requests.post('https://translate.api.cloud.yandex.net/translate/v2/translate', headers=headers, data=translate_json_str)
+            #transation_api_result.content - bytes строка результата
+            #transation_api_result.text - обычная строка результата
 
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': 'Api-Key '+config.config['secret_keys']['yandex']['Api-Key'],
-        }
+            #Преобразуем полученный ответ из JSON в питонические данные
+            pythonic_results = json.loads(transation_api_result.content)
+            #проверять ошибки! Не писать в базу, если есть ошибки перевода! Бросать исключение!
+            try:
+                self.sent[1] = pythonic_results["translations"][0]['text']
+            except KeyError:
+                print (transation_api_result.__dict__)
+                #print(type(pythonic_results))
+                #print(type(pythonic_results["translations"]))
+                #print(type(pythonic_results["translations"][0]))
+                #print(type(pythonic_results["translations"][0]['text']))
+                #print(pythonic_results["translations"][0]['text'])
+                exit()
+                return None
+            #Строка данных перевода
 
-        translate_array_to_send = \
-        {
-            #folderId нужен для авторизации при переводе?
-            "folderId": config.config['secret_keys']['yandex']['folderId'],
-            #Массив текстов, отправляемых на перевод, можно отправлять несколько в одном запросе
-            "texts": [self.sent[0]],
-            "sourceLanguageCode": config.config['translation']['sourceLanguageCode'],
-            "targetLanguageCode": config.config['translation']['targetLanguageCode'],
-            "format": config.config['translation']['format'],
-        }
-        #Создаём строку с json-данными для отправки через API-перевода
-        translate_json_str = json.dumps(translate_array_to_send, ensure_ascii=True, indent=None, separators=(',', ':') )
+            #записать перевод в кеш переводов в базу данных
+            db1.save_to_cache({'from':self.sent[0], 'to':self.sent[1]})
+            print(db1)
 
-        #Получаем перевод от сервиса
-        transation_api_result = requests.post('https://translate.api.cloud.yandex.net/translate/v2/translate', headers=headers, data=translate_json_str)
-        #transation_api_result.content - bytes строка результата
-        #transation_api_result.text - обычная строка результата
-
-        #TODO проверять ошибки! Не писать в базу, если есть ошибки перевода! Бросать исключение!
-
-
-        #print ('transation_api_result = ')
-        #print (type(transation_api_result))
-        #print (transation_api_result.__dict__)
-        #print ('transation_api_result.text:::')
-        #print (transation_api_result.text)
-        #print ('transation_api_result.content:::')
-        #print (transation_api_result.content)
-
-        #Преобразуем полученный ответ из JSON в питонические данные
-        pythonic_results = json.loads(transation_api_result.content);
-        #print(type(pythonic_results["translations"][0]['text']))
-        #print(type(pythonic_results["translations"][0]))
-        #print(type(pythonic_results["translations"]))
-        #print(type(pythonic_results))
-        #print(pythonic_results["translations"][0]['text'])
-
-        self.sent[1] = pythonic_results["translations"][0]['text']
-        return self.sent[1]
+            return self.sent[1]
