@@ -34,7 +34,7 @@ glosary = dict()
 
 #walk on untranslated sentences in DB, sent it to parser
 #Получить следующую запись для перевода от объекта DB в цикле пока не кончатся записи
-i=100
+i=10000
 while True:
     i-=1
     if i<=0:     print('        Всёшечки! ');break

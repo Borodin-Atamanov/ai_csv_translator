@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-fps=1;
+fps=001;
 ffmpeg_path='ffmpeg';
 NEWDIR="$HOME/timelapse/";
 CUR_RESOLUTION=`xdpyinfo | grep 'dimensions:'| awk '{print $2}'`;
