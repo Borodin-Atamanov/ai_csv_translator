@@ -21,6 +21,10 @@ glosary = dict()
 #Новая вводная! ;)))
 
 #"""
+
+#test_text = """
+#Все посчита{л|ла}? Сначала скажиме мне, сколько квадратов ты наш{ел|ла} в этой фигуре?
+#"""
 #sent = SentenceParser(test_text)
 #translated_sentence = sent.get_translated(glosary)
 #for key in sent.sent_history:
@@ -30,11 +34,10 @@ glosary = dict()
 
 #walk on untranslated sentences in DB, sent it to parser
 #Получить следующую запись для перевода от объекта DB в цикле пока не кончатся записи
-i=0
+i=100
 while True:
-    i+=1
-    if i>121:     print('        Всёшечки! ');break
-    #TODO нужно или хранить в памяти весь список из БД или отмечать в базе, что запись не обработана (обработана с ошибкой)
+    i-=1
+    if i<=0:     print('        Всёшечки! ');break
     row = db1.get_next_untranslated_sentence()
     print(vars(db1))
     #id, original_id, from_sent = row[0], row[1], row[2]
@@ -56,7 +59,7 @@ while True:
     row['to'] = translated_sentence
     #print(sent.__dict__)
     for key in sent.sent_history:
-        print (f'   {key}:')
+        print ('    ('+str(len(sent.sent_history[key])) + ')    '+key+'    :')
         print (sent.sent_history[key])
 
     print ()

@@ -39,11 +39,14 @@ class SentenceParser():
         "Return translated sencence"
         self.glosary = glosary
 
-        #Выполняем парсинг фразы
-        self.parse()
+        #Начинаем обработку строки с простого копирования исходной в результирующую
+        self.sent[1] = self.sent[0]
 
-        #TODO2 половые теги удалены: заменены на первый вариант, фигурные скобки заменены на переводобезопасные символы (может просто удалить всё от символа '|' до символа '}, удалить символ '{')
+        #половые теги удалены: заменены на первый вариант, фигурные скобки заменены на переводобезопасные символы (может просто удалить всё от символа '|' до символа '}, удалить символ '{')
         self.convert_sex_tags_to_first_comer()
+
+        #Выполняем парсинг фразы на теги и текст
+        self.parse()
 
         #получаем единственную строку, в которой все теги заменены на безопасные для перевода символы
         self.convert_tags_to_safety_chars()
@@ -62,12 +65,59 @@ class SentenceParser():
         #return self.sent_history['convert_tags_to_safety_chars']
         return self.sent[1]
 
+    def convert_sex_tags_to_first_comer(self):
+        "Method convert all sex-tags (like my 'dear {boy|girl}friend' to 'boyfriend')"
+        #Проходимся по строке до тех пор пока не перестанем находить символы "половых" тегов: {,|,}
+        #Временная строка-замена sex_tags, которая не должна встретиться в текста
+        safety_sex_tag_replacement = '=-z684vg64cawceghn567mi78468nb3v34cx2z3dxzdvz-='
+        i=900
+        while True:
+            pos = {}    #Массив позиций
+            pos['start'] = self.sent[1].find(config.config['sex_tags']['start_char'])
+            if pos['start'] == -1:
+                break
+            pos['middle'] = self.sent[1].find(config.config['sex_tags']['middle_char'])
+            if pos['middle'] == -1:
+                break
+            pos['end'] = self.sent[1].find(config.config['sex_tags']['end_char'])
+            if pos['end'] == -1:
+                break
+            pos['max'] = max(pos.values())
+            pos['text'] = self.sent[1][pos['start']+1:pos['end']]
+            #TODO обрабатываем половой тег (заменяя в тексте на временный вариант?)
+            new_string = {}
+            new_string[0] = self.sent[1][ 0 : pos['start'] ]
+            new_string[1] = self.sent[1][ pos['start']+1 : pos['middle'] ]
+            #Добавляем временную строчку вместо окончания полового тега
+            new_string[2] = safety_sex_tag_replacement
+            new_string[3] = self.sent[1][ pos['end']+1 : len(self.sent[1])+1 ]
+            self.sent[1] = '' + new_string[0] + new_string[1] + new_string[2] + new_string[3]
+            #print(pos)
+            #print(self.sent[1])
+            i-=1
+            if i<=0:
+                break
+
+        #Создаём строку с пустым половым тегом (обычно "{|}")
+        #Вставляем в строку пустой половой тег на то место, где он был примерно, если это указано в конфигурации
+        if config.config['sex_tags']['save_empty_sex_tags']:
+            empty_sex_tag = config.config['sex_tags']['start_char'] + config.config['sex_tags']['middle_char'] + config.config['sex_tags']['end_char']
+        else:
+            #Меняем на пустой символ, позиция полового тега в тексте не сохранится
+            empty_sex_tag = ''
+        self.sent[1] = self.sent[1].replace(safety_sex_tag_replacement, empty_sex_tag)
+
+        self.sent_history['after_sex_tags_crop'] = self.sent[1]
+        return True
+
     def parse(self):
         "Parse sentence into subsentences"
-        self.soup = BeautifulSoup(self.sent[0], "html.parser")
-        self.sent[1] = self.soup.prettify(formatter="minimal")
-        self.sent[1] = str(self.soup)
-        self.sent[1] = self.sent[0] #Don't change HTML-entities to UTF8-chars
+
+        if config.config['translation']['change_html_entities_to_utf8_chars']:
+            self.soup = BeautifulSoup(self.sent[1], "html.parser")
+            self.sent[1] = self.soup.prettify(formatter="minimal")
+            self.sent[1] = str(self.soup)
+        self.sent[1] = self.sent[1] #Don't change HTML-entities to UTF8-chars
 
         #self.show_tags()
 
@@ -92,6 +142,8 @@ class SentenceParser():
         si=config.config['translation']['safety_for_translation_sign']
         #Минимальное Количество символов, безопасных для перевода и замены в тегах
         cs=config.config['translation']['minimum_safety_for_translation_chars']
+        #Добавлять этот символ вокруг переводобезопасных символов
+        ad=config.config['translation']['add_this_char_around_safety_for_translation_sign']
 
         #Проходимся по тегам, от конца в начало, генерируем безопасные-для перевода замены
         i=0
@@ -108,7 +160,7 @@ class SentenceParser():
         #print('Отсортировано по длине тегов: ', self.tags_safety_replacement)
         #Превратим теги в переводобезопасные символы, начиная с самых длинных тегов
         for key in tuple(self.tags_safety_replacement):
-            self.sent[1] = self.sent[1].replace(self.tags_safety_replacement[key], key, 1)
+            self.sent[1] = self.sent[1].replace(self.tags_safety_replacement[key], ad+key+ad, 1)
 
         #print ("Input\n", self.sent[0], "\nResult\n", self.sent[1], "\n")
 
@@ -215,10 +267,6 @@ class SentenceParser():
 
     def glossary_translate(self, glosary:dict):
         "find and replace by glossary"
-        return True
-
-    def convert_sex_tags_to_first_comer(self):
-        "Method"
         return True
 
     def get_translation_from_internet(self):
