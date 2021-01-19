@@ -5,6 +5,8 @@ from SingletonDB import SingletonDB
 #Класс парсинга фраз перед и после перевода
 from SentenceParser import SentenceParser
 
+
+
 #Create new object to communicate with database
 db1 = SingletonDB()
 #Open connection to sqlite3 database file
@@ -34,7 +36,7 @@ glosary = dict()
 
 #walk on untranslated sentences in DB, sent it to parser
 #Получить следующую запись для перевода от объекта DB в цикле пока не кончатся записи
-i=10000
+i=100000
 while True:
     i-=1
     if i<=0:     print('        Всёшечки! ');break

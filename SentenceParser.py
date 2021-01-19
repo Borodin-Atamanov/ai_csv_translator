@@ -92,8 +92,6 @@ class SentenceParser():
             new_string[2] = safety_sex_tag_replacement
             new_string[3] = self.sent[1][ pos['end']+1 : len(self.sent[1])+1 ]
             self.sent[1] = '' + new_string[0] + new_string[1] + new_string[2] + new_string[3]
-            #print(pos)
-            #print(self.sent[1])
             i-=1
             if i<=0:
                 break
