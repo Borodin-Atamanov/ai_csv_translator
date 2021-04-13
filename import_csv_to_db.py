@@ -12,6 +12,7 @@ if not os.path.exists(config['files']['backups_dir']):
     os.makedirs(config['files']['backups_dir'])
 #Backup BD
 if (os.path.isfile(config['db']['sqlite3file'])):
+    #Move all DB to backups
     shutil.move (config['db']['sqlite3file'], config['files']['backups_dir']+datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")+config['files']['db_backup_filename_end'])
 
 #Create new object to communicate with database
@@ -35,3 +36,4 @@ with open(config['files']['input_csv_file'], mode='r') as csv_file:
 
 #TODO Read data from glossary CSV and load it to SQLite3-database
 print(db1.__dict__)
+

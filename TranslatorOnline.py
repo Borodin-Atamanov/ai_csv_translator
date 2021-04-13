@@ -30,6 +30,13 @@ class TranslatorOnline():
         db1.open(config.config['db']['sqlite3file'])
         cache_row = db1.get_from_cache({'from': self.sent[0]})
         #print(vars(db1))
+        #If sentence is empty string - than translation is empty string too
+        if self.sent[0] == '':
+            print (f"       Пустая строка")
+            self.sent[1] = ''
+            #Вернём перевод из кеша
+            return self.sent[1]
+
         #id, original_id, from_sent = row[0], row[1], row[2]
         if cache_row is not None and cache_row.get('to') is not None:
             #В кеше нашёлся точный перевод,
@@ -58,6 +65,7 @@ class TranslatorOnline():
                 "targetLanguageCode": config.config['translation']['targetLanguageCode'],
                 "format": config.config['translation']['format'],
             }
+            print (translate_array_to_send);
             #Создаём строку с json-данными для отправки через API-перевода
             translate_json_str = json.dumps(translate_array_to_send, ensure_ascii=True, indent=None, separators=(',', ':') )
 
