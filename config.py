@@ -36,15 +36,27 @@ config = {
     #Настройки перевода
     'translation':
     {
+        #Пытаться ли искать перевод в локальном кеше перед отправкой платного запроса в интернет
+        #'try_cache_before_internet': True,
+        'try_cache_before_internet': False,
+        #Сохранять ли сделанный перевод в базу данных
+        'save_translation_to_db': True,
         #Символ, использующийся для перевода, который не влияет на качество перевода,
         #Такие символы временно заменяют собой теги перед отправкой на онлайн перевод
         'safety_for_translation_sign':  '#',
         #Какие символы добавлять вокруг safety_for_translation_sign при замене тегов (этот символ останется в результирующем переводе!)
         #'add_this_char_around_safety_for_translation_sign': ' ',
-        'add_this_char_around_safety_for_translation_sign': '',
-        #Минимальное количество символов, временно кодирующее один тег
-        'minimum_safety_for_translation_chars':  3,
+        'add_this_char_around_safety_for_translation_sign': ' ',
+        #Удалять дублирующиеся пробельные символы add_this_char_around_safety_for_translation_sign, если они встретятся в тексте
+        'remove_dublicate_char_around_safety_for_translation_sign': True,
+        #Использовать ли только один символ для временного кодирования каждого тега
+        'use_only_one_safety_char_for_each_tag': False,
+        #Временный внутренний шаблон для пометки места в строке, где находится тег (имеет смысл только если use_only_one_safety_char_for_each_tag: False) не должен включать в себя safety_for_translation_sign!
+        'tempory_tag_template': ' <!--TAG_ID={}--> ',
+        #Минимальное количество символов, временно кодирующее один тег (имеет смысл только если use_only_one_safety_char_for_each_tag: True)
+        'minimum_safety_for_translation_chars':  6,
         #change HTML-entities to UTF8-chars
+        #'change_html_entities_to_utf8_chars': True,
         'change_html_entities_to_utf8_chars': False,
 
         #Настройки машинного перевода через API
@@ -52,8 +64,9 @@ config = {
         "sourceLanguageCode": "ru",
         #Код целевого языка
         "targetLanguageCode": "en",
-        #Формат текста
+        #Формат текста "PLAIN_TEXT" или "HTML"
         "format": "HTML",
+        #"format": "PLAIN_TEXT",
     },
 
     #Секретные ключи для доступа к платному переводу, импортируются из файла config_secret_keys.py

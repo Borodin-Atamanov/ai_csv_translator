@@ -36,7 +36,7 @@ glosary = dict()
 
 #walk on untranslated sentences in DB, sent it to parser
 #Получить следующую запись для перевода от объекта DB в цикле пока не кончатся записи
-i=100000
+i=2000000000
 while True:
     i-=1
     if i<=0:     print('        Всёшечки! ');break
@@ -66,6 +66,7 @@ while True:
 
     print ()
     #перевод записывается обратно в базу, делается отметка о времени перевода через объект DB
-    db1.save_translated_sentence(row)
+    if config['translation']['save_translation_to_db']:
+        db1.save_translated_sentence(row)
 
 #sent = SentenceParser()

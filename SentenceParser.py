@@ -8,7 +8,7 @@ from TranslatorOnline import TranslatorOnline
 from TranslationCacher import TranslationCacher
 
 #from pprint import pprint
-#import json
+import json
 #import copy
 
 class SentenceParser():
@@ -143,23 +143,44 @@ class SentenceParser():
         #Добавлять этот символ вокруг переводобезопасных символов
         ad=config.config['translation']['add_this_char_around_safety_for_translation_sign']
 
-        #Проходимся по тегам, от конца в начало, генерируем безопасные-для перевода замены
-        i=0
-        for key in tuple(sorted(self.tags_start_end, reverse=True)):
-            i+=1
-            code = ''+si*(i+cs)+'' #repeat si string i+cs times
-            print(code, self.tags_start_end[key])
-            self.tags_safety_replacement[code] = self.tags_start_end[key]['text']
+
+        #Какой вариант преобразования тегов во временные символы используется?
+        if config.config['translation']['use_only_one_safety_char_for_each_tag']:
+            #Один тегобезопасный символ повторяется несколько раз (разное количество решёток заменяет разные теги)
+            #Проходимся по тегам, от конца в начало, генерируем безопасные-для перевода замены
+            i=0
+            for key in tuple(sorted(self.tags_start_end, reverse=True)):
+                i+=1
+                code = ''+si*(i+cs)+'' #repeat si string i+cs times
+                self.tags_safety_replacement[code] = self.tags_start_end[key]['text']
+        else:
+            #Используется только один тегобезопасный символ для любого тега (каждый тег заменяется одной решёточкой)
+            #Проходимся от начала к концу, помечаем запоминаем какой тег на какой теговой позиции в строке
+            i=0
+            for key in tuple(sorted(self.tags_start_end, reverse=False)):
+                i+=1
+                code = config.config['translation']['tempory_tag_template'].format(i);
+                #print(code, self.tags_start_end[key])
+                self.tags_safety_replacement[code] = self.tags_start_end[key]['text']
 
         print (self.tags_safety_replacement)
 
-        #Отсортируем массив по длинам строк тегов, начиная с самых длинных, чтобы сначала заменять более длинные теги, ведь длина имеет значение при строковых операциях!
-        self.tags_safety_replacement = {k: v for k,v in sorted(self.tags_safety_replacement.items(), reverse=True, key=lambda item: len(str(item[1]))) }
-        #print('Отсортировано по длине тегов: ', self.tags_safety_replacement)
-        #Превратим теги в переводобезопасные символы, начиная с самых длинных тегов
-        for key in tuple(self.tags_safety_replacement):
-            self.sent[1] = self.sent[1].replace(self.tags_safety_replacement[key], ad+key+ad, 1)
+        #Какой вариант преобразования тегов во временные символы используется?
+        if config.config['translation']['use_only_one_safety_char_for_each_tag']:
+            #Один тегобезопасный символ повторяется несколько раз (разное количество решёток заменяет разные теги)
+            #Проходимся по тегам, от конца в начало, генерируем безопасные-для перевода замены
+            #Отсортируем массив по длинам строк тегов, начиная с самых длинных, чтобы сначала заменять более длинные теги сначала, ведь более короткие теги могут повторяться внутри более длинных!
+            self.tags_safety_replacement = {k: v for k,v in sorted(self.tags_safety_replacement.items(), reverse=True, key=lambda item: len(str(item[1]))) }
+            print('Отсортировано по длине тегов: ', self.tags_safety_replacement)
+            #Превратим теги в переводобезопасные символы, начиная с самых длинных тегов
+            for key in tuple(self.tags_safety_replacement):
+                self.sent[1] = self.sent[1].replace(self.tags_safety_replacement[key], ad+key+ad, 1)
+        else:
+            #Используется только один тегобезопасный символ для любого тега (каждый тег заменяется одной решёточкой)
+            for key in tuple(self.tags_safety_replacement):
+                self.sent[1] = self.sent[1].replace(self.tags_safety_replacement[key], ad+si+ad, 1)
 
+        print (json.dumps(self.tags_safety_replacement, ensure_ascii=False, indent=4, separators=(',', ':') ) )
         #print ("Input\n", self.sent[0], "\nResult\n", self.sent[1], "\n")
 
         self.sent_history['convert_tags_to_safety_chars'] = self.sent[1] #save to history
@@ -171,13 +192,42 @@ class SentenceParser():
         "Method replace all safety-to-translate tags to original tags, using self.tags_safety_replacement"
         #Отсортируем массив по длинам строк тегов, начиная с самых длинных, чтобы сначала заменять более длинные теги, ведь длина имеет значение при строковых операциях!
 
-        #Превратим переводобезопасные коды в исходные теги, начиная с самых длинных кодов
-        sorted_by_key_len_tuple = tuple( sorted(self.tags_safety_replacement, key=len, reverse=True))
-        #print('Отсортировано по убыванию длины тегов: ', sorted_by_key_len_tuple)
-        for key in sorted_by_key_len_tuple:
-            self.sent[1] = self.sent[1].replace(key, self.tags_safety_replacement[key], 1)
+        #Символ, безопасный для перевода
+        si=config.config['translation']['safety_for_translation_sign']
+        #Добавлять этот символ вокруг переводобезопасных символов
+        ad=config.config['translation']['add_this_char_around_safety_for_translation_sign']
+
+        #Убираем добавленные символы (вокруг тегозамещающих решёток). То есть до решётки и после решётки убирается пробел
+        if config.config['translation']['add_this_char_around_safety_for_translation_sign']:
+            for i in range(0, 17):
+                self.sent[1] = self.sent[1].replace(si+ad, si)
+                self.sent[1] = self.sent[1].replace(ad+si, si)
+
+        #Убираем дублирующиеся символы, которые добавляются вокруг обезопашивающих теги символов. (Обычно два пробела заменяем на один)
+        if config.config['translation']['remove_dublicate_char_around_safety_for_translation_sign']:
+            for i in range(0, 17):
+                self.sent[1] = self.sent[1].replace(ad+ad, ad)
+
+        #Какой вариант преобразования тегов во временные символы используется?
+        if config.config['translation']['use_only_one_safety_char_for_each_tag']:
+            #Один тегобезопасный символ повторяется несколько раз (разное количество решёток заменяет разные теги)
+            #Превратим переводобезопасные коды в исходные теги, начиная с самых длинных кодов
+            sorted_by_key_len_tuple = tuple( sorted(self.tags_safety_replacement, key=len, reverse=True))
+            #print('Отсортировано по убыванию длины тегов: ', sorted_by_key_len_tuple)
+            for key in sorted_by_key_len_tuple:
+                self.sent[1] = self.sent[1].replace(key, self.tags_safety_replacement[key], 1)
+        else:
+            #Используется только один тегобезопасный символ для любого тега (каждый тег заменяется одной решёточкой)
+            #Сначала превратим каждую встреченную решёточку в подстроку вида <!-- TAG_ID=4 -->
+            for key in self.tags_safety_replacement:
+                #Находим первую решётку, заменяем её на <!-- TAG_ID=1 -->, продолжаем
+                self.sent[1] = self.sent[1].replace(si, key, 1)
+            #Пройдёмся по тегам, превратить строки вида <!--TAG_ID=4--> в исходные теги
+            for key in self.tags_safety_replacement:
+                self.sent[1] = self.sent[1].replace(key, self.tags_safety_replacement[key], 1)
 
         self.sent_history['convert_safety_chars_to_tags_back'] = self.sent[1] #save to history
+        self.show_tags()
         return True
 
     def find_start_end_of_the_tag(self, regex:str):
