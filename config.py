@@ -53,8 +53,8 @@ config = {
         'use_only_one_safety_char_for_each_tag': False,
         #Временный внутренний шаблон для пометки места в строке, где находится тег (имеет смысл только если use_only_one_safety_char_for_each_tag: False) не должен включать в себя safety_for_translation_sign!
         'tempory_tag_template': ' <!--TAG_ID={}--> ',
-        #Минимальное количество символов, временно кодирующее один тег (имеет смысл только если use_only_one_safety_char_for_each_tag: True)
-        'minimum_safety_for_translation_chars':  6,
+        #Минимальное количество символов, временно кодирующее один тег
+        'minimum_safety_for_translation_chars':  2,
         #change HTML-entities to UTF8-chars
         #'change_html_entities_to_utf8_chars': True,
         'change_html_entities_to_utf8_chars': False,

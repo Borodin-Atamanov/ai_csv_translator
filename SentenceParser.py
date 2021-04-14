@@ -176,9 +176,9 @@ class SentenceParser():
             for key in tuple(self.tags_safety_replacement):
                 self.sent[1] = self.sent[1].replace(self.tags_safety_replacement[key], ad+key+ad, 1)
         else:
-            #Используется только один тегобезопасный символ для любого тега (каждый тег заменяется одной решёточкой)
+            #Используется только один тегобезопасный символ для любого тега (каждый тег заменяется одинаковым количеством решёточек)
             for key in tuple(self.tags_safety_replacement):
-                self.sent[1] = self.sent[1].replace(self.tags_safety_replacement[key], ad+si+ad, 1)
+                self.sent[1] = self.sent[1].replace(self.tags_safety_replacement[key], ad+(si+ad)*cs, 1)
 
         print (json.dumps(self.tags_safety_replacement, ensure_ascii=False, indent=4, separators=(',', ':') ) )
         #print ("Input\n", self.sent[0], "\nResult\n", self.sent[1], "\n")
@@ -225,6 +225,8 @@ class SentenceParser():
             #Пройдёмся по тегам, превратить строки вида <!--TAG_ID=4--> в исходные теги
             for key in self.tags_safety_replacement:
                 self.sent[1] = self.sent[1].replace(key, self.tags_safety_replacement[key], 1)
+
+        #TODO Определять, если какие-то теги были в исходной строке, но пропали в результирующей - добавить их в конец строки (чтобы они не пропали, а хотя бы как-то присутствовали)
 
         self.sent_history['convert_safety_chars_to_tags_back'] = self.sent[1] #save to history
         self.show_tags()
@@ -325,13 +327,22 @@ class SentenceParser():
         self.sent[1] = self.TranslatorOnline.get_translated()
         self.sent_history['after_translate'] = self.sent[1]
 
+        #Символ, безопасный для перевода
+        si=config.config['translation']['safety_for_translation_sign']
+
         #Убираем мусорные пробельные символы находящиеся между "переводобезопасными символами"
-        s='\\'+config.config['translation']['safety_for_translation_sign']
+        s='\\'+si
         #Формируем строку поиска по шаблону "#(пробелы)#"
         finder_str = ''+s+r'[\s\r\n]{1,}'+s+''
         for i in range(0, 17):
             #r'\#[\s\r\n]{1,}\#' --> '##'
-            self.sent[1] = re.sub(finder_str, config.config['translation']['safety_for_translation_sign']*2, self.sent[1])
+            self.sent[1] = self.sent[1].replace(si+' ', si)
+            self.sent[1] = self.sent[1].replace(' '+si, si)
+            self.sent[1] = re.sub(finder_str, si*2, self.sent[1])
+            #Двойной тегобезопасный символ меняем на одинарный!!!
+            self.sent[1] = self.sent[1].replace(si*2, si)
+            #Двойной пробел меняем на одинарный
+            self.sent[1] = self.sent[1].replace(' '*2, ' ')
 
         #print (f'Результат перевода: {self.sent[1]}');
         self.sent_history['cleaning_after_translate'] = self.sent[1]
