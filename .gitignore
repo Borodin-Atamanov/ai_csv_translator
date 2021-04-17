@@ -1,4 +1,6 @@
-
+main.sqlite3db
+backups/**
+work/**
 logs/**
 *.pyc
 __pycache__
